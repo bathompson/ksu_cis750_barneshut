@@ -1,0 +1,1 @@
+add_executable(serial_direct_sum serial_direct_sum.c)
