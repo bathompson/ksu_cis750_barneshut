@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CUDA_STANDARD 14)
 
 include_directories(src)
+include(lib/CPM.cmake)
 
 add_subdirectory(src/serial)
 add_subdirectory(src/parallel)
