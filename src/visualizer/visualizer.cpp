@@ -1,8 +1,18 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include "shader_program.h"
+#include "vertex_buffer.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+const std::string vs_source =
+#include "shader/simple_vertex.glsl"
+;
+
+const std::string fs_source =
+#include "shader/simple_fragment.glsl"
+;
 
 int main(int argc, char *argv[]) {
     glfwInit();
@@ -24,10 +34,23 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    ShaderProgram shader = ShaderProgram(vs_source, fs_source);
+    VertexBuffer<SimpleVertex> vbo = VertexBuffer<SimpleVertex>(SimpleVertex::setAttribPointers);
+
+    SimpleVertex vertices[] = {
+        {{-0.5f, -0.5f, 0.0f}},
+        {{0.5f, -0.5f, 0.0f}},
+        {{0.0f,  0.5f, 0.0f}}
+    };
+
     while(!glfwWindowShouldClose(window))
     {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        shader.use();
+        vbo.bind(vertices, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

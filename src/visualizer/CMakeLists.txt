@@ -8,7 +8,7 @@ CPMAddPackage(
     DOWNLOAD_ONLY YES
 )
 
-add_executable(visualizer visualizer.cpp)
+add_executable(visualizer visualizer.cpp shader_program.cpp shader_program.h vertex_buffer.h vertex.h)
 
 target_link_libraries(visualizer glfw)
 target_link_libraries(visualizer glad)
