@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <iostream>
+#include <glm/gtc/type_ptr.hpp>
 
 ShaderProgram::ShaderProgram(const std::string& vertexCode, const std::string& fragmentCode) {
     const char* vertexData = vertexCode.c_str();
@@ -54,4 +55,28 @@ ShaderProgram::~ShaderProgram() {
 
 void ShaderProgram::use() const {
     glUseProgram(shaderProgram);
+}
+
+void ShaderProgram::setUniformInt(const std::string &name, int value) const {
+    glUniform1i(glGetUniformLocation(shaderProgram, name.c_str()), value);
+}
+
+void ShaderProgram::setUniformFloat(const std::string &name, float value) const {
+    glUniform1f(glGetUniformLocation(shaderProgram, name.c_str()), value);
+}
+
+void ShaderProgram::setUniformVec2(const std::string &name, glm::vec2 value) const {
+    glUniform2fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, glm::value_ptr(value));
+}
+
+void ShaderProgram::setUniformVec3(const std::string &name, glm::vec3 value) const {
+    glUniform3fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, glm::value_ptr(value));
+}
+
+void ShaderProgram::setUniformVec4(const std::string &name, glm::vec4 value) const {
+    glUniform4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, glm::value_ptr(value));
+}
+
+void ShaderProgram::setUniformMat4(const std::string &name, glm::mat4 value) const {
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, name.c_str()), 1, false, glm::value_ptr(value));
 }
