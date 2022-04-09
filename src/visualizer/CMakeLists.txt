@@ -8,7 +8,7 @@ CPMAddPackage(
     DOWNLOAD_ONLY YES
 )
 
-add_executable(visualizer visualizer.cpp shader_program.cpp shader_program.h vertex_buffer.h vertex.h camera.h CameraController.cpp CameraController.h)
+add_executable(visualizer visualizer.cpp shader_program.cpp shader_program.h vertex_buffer.h vertex.h camera.h camera_controller.cpp camera_controller.h result_file.cpp result_file.h)
 
 target_link_libraries(visualizer glfw)
 target_link_libraries(visualizer glad)

@@ -1,14 +1,14 @@
-#include "CameraController.h"
+#include "camera_controller.h"
 
 #include <GLFW/glfw3.h>
 
-void CameraController::updateSize(int width, int height) {
+void camera_controller::updateSize(int width, int height) {
     camera.width = width;
     camera.height = height;
     camera.update();
 }
 
-void CameraController::processInput(GLFWwindow *window, float delta) {
+void camera_controller::processInput(GLFWwindow *window, float delta) {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.position += speed * delta * camera.front;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -22,7 +22,7 @@ void CameraController::processInput(GLFWwindow *window, float delta) {
     camera.update();
 }
 
-void CameraController::processMouse(GLFWwindow *window, double xpos, double ypos) {
+void camera_controller::processMouse(GLFWwindow *window, double xpos, double ypos) {
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)) {
         if (firstMouse) {
             lastMouseX = xpos;

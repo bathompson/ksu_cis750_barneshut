@@ -4,7 +4,7 @@
 
 class GLFWwindow;
 
-class CameraController {
+class camera_controller {
 private:
     Camera camera;
 
@@ -19,7 +19,7 @@ public:
     float speed = 2.5f;
     float sensitivity = 0.1f;
 
-    CameraController(glm::vec3 position, glm::vec3 front) : camera(position, front) {}
+    camera_controller(glm::vec3 position, glm::vec3 front) : camera(position, front) {}
 
     void updateSize(int width, int height);
     void processInput(GLFWwindow *window, float delta);
