@@ -1,10 +1,12 @@
 #include "result_file.h"
 
+#include <limits>
+
 ResultFile::ResultFile(const std::string &path) : d_current_frame(0) {
     d_stream.open(path, std::ios::in | std::ios::binary);
 
     // Get size of file
-    d_stream.ignore( std::numeric_limits<std::streamsize>::max() );
+    d_stream.ignore(std::numeric_limits<std::streamsize>::max());
     std::streamsize size = d_stream.gcount();
     d_stream.clear();
     d_stream.seekg(0, std::ios_base::beg);

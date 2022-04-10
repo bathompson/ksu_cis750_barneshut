@@ -7,10 +7,34 @@ CPMAddPackage(
     GIT_TAG af1a5bc352164740c1cc1354942b1c6b72eacb8a
     DOWNLOAD_ONLY YES
 )
+CPMAddPackage(
+    NAME imgui
+    GIT_REPOSITORY "https://github.com/ocornut/imgui.git"
+    GIT_TAG v1.87
+    DOWNLOAD_ONLY YES
+)
+CPMAddPackage(
+    NAME imgui-filebrowser
+    GIT_REPOSITORY https://github.com/AirGuanZ/imgui-filebrowser.git
+    GIT_TAG ad86141dadc76b6338cfd069b1ef4883adf90e3f
+    DOWNLOAD_ONLY YES
+)
 
-add_executable(visualizer visualizer.cpp shader_program.cpp shader_program.h vertex_buffer.h vertex.h camera.h camera_controller.cpp camera_controller.h result_file.cpp result_file.h)
+aux_source_directory(${imgui_SOURCE_DIR} IMGUI_SOURCES)
+add_executable(visualizer
+    shader_program.cpp shader_program.h
+    vertex_buffer.h vertex.h
+    camera.h camera_controller.cpp camera_controller.h
+    result_file.cpp result_file.h
+    imgui_ui.cpp imgui_ui.h
+    ${IMGUI_SOURCES} ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+    ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.h ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
+    visualizer.cpp
+)
 
 target_link_libraries(visualizer glfw)
 target_link_libraries(visualizer glad)
 target_link_libraries(visualizer glm::glm)
 target_include_directories(visualizer PUBLIC ${stb_SOURCE_DIR})
+target_include_directories(visualizer PUBLIC ${imgui_SOURCE_DIR})
+target_include_directories(visualizer PUBLIC ${imgui-filebrowser_SOURCE_DIR})
