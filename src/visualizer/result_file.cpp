@@ -28,7 +28,7 @@ ResultFile::~ResultFile() {
 }
 
 void ResultFile::seek(size_t frame) {
-    if (frame >= 0 && frame < d_count_frames) {
+    if (frame >= 0 && frame < d_count_frames && frame != d_current_frame) {
         d_stream.seekg(sizeof(size_t) + d_num_bodies * sizeof(float) + frame * 3 * d_num_bodies * sizeof(float),
            std::ios::beg);
         d_stream.read((char *) d_positions.data(), 3 * d_num_bodies * sizeof(float));

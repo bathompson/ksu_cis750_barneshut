@@ -83,15 +83,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (results != nullptr) {
-            timeSinceSeek += deltaTime;
-            if (timeSinceSeek > SEEK_TIME_GAP) {
-                if (results->current_frame() + 1 < results->count_frames()) {
-                    //results.seek(results.current_frame() + 1);
-                } else {
-                    results->seek(0);
-                }
-                timeSinceSeek = 0;
-            }
+            results->seek(ui.selectedFrame);
 
             glBindVertexArray(vao);
             positionVbo.bind(results->positions(), results->num_bodies() * 3);
