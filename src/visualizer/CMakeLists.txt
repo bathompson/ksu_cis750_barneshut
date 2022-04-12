@@ -35,6 +35,7 @@ add_executable(visualizer
 target_link_libraries(visualizer glfw)
 target_link_libraries(visualizer glad)
 target_link_libraries(visualizer glm::glm)
+target_link_options(visualizer PRIVATE -static-libgcc -static-libstdc++ -lstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive)
 target_include_directories(visualizer PUBLIC ${stb_SOURCE_DIR})
 target_include_directories(visualizer PUBLIC ${imgui_SOURCE_DIR})
 target_include_directories(visualizer PUBLIC ${imgui-filebrowser_SOURCE_DIR})
