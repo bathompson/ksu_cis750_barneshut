@@ -66,6 +66,7 @@ int main(int argc, char *argv[]) {
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
+    float timeSinceChange = 0.0f;
     while(!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -77,13 +78,27 @@ int main(int argc, char *argv[]) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+        ui.sceneFPS = 1.0f / deltaTime;
+
         if (ui.hasNewFile()) {
             results = std::make_shared<ResultFile>(ui.popFile());
             ui.setMaxFrame(results->count_frames());
         }
 
         if (results != nullptr) {
-            results->seek(ui.selectedFrame);
+            if (!ui.playing) {
+                results->seek(ui.selectedFrame);
+            } else {
+                timeSinceChange += deltaTime;
+                if (timeSinceChange > (1.0f / ui.playbackFPS)) {
+                    if (results->current_frame() + 1 >= results->count_frames()) {
+                        results->seek(0);
+                    } else {
+                        results->seek(results->current_frame() + 1);
+                    }
+                    timeSinceChange = 0;
+                }
+            }
 
             glBindVertexArray(vao);
             positionVbo.bind(results->positions(), results->num_bodies() * 3);

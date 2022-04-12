@@ -11,6 +11,9 @@ namespace ImGui {
 class ImguiUI {
 public:
     int selectedFrame = 0;
+    int playbackFPS = 30;
+    float sceneFPS = 0;
+    bool playing = false;
 
 public:
     ImguiUI(GLFWwindow* window);
