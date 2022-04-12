@@ -1,11 +1,12 @@
-R"(
 #version 330 core
 
 out vec4 FragColor;
 
 varying float vMass;
 
+uniform sampler2D massTexture;
+
 void main() {
-   FragColor = vec4(vMass / 5.0, vMass / 5.0, vMass / 5.0, 1.0f);
+   vec4 texVal = texture(massTexture, vec2(vMass, 0.5));
+   FragColor = texVal;
 }
-)"
