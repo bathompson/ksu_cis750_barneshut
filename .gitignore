@@ -79,3 +79,6 @@ cmake-build-*/
 
 #N-Body simulation output files
 *.nbody
+
+#CSV
+*.csv
