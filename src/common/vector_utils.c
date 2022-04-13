@@ -1,4 +1,4 @@
-#include "VectorUtils.h"
+#include "vector_utils.h"
 #include <math.h>
 
 Vec3f newVec3f(float x, float y, float z) {

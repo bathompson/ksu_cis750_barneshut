@@ -1,6 +1,6 @@
 #pragma once
 #include <stdio.h>
-#include "VectorUtils.h"
+#include "vector_utils.h"
 
 void readInput(FILE *input, Body *loadLoc, size_t n);
 
