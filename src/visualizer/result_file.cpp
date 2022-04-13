@@ -20,6 +20,17 @@ ResultFile::ResultFile(const std::string &path) : d_current_frame(0) {
     d_positions.resize(3 * d_num_bodies);
     d_stream.read((char*) d_masses.data(), d_num_bodies * sizeof(float));
     d_stream.read((char*) d_positions.data(), 3 * d_num_bodies * sizeof(float));
+
+    // Normalize masses
+    float maxMass = std::numeric_limits<float>::min();
+    float minMass = std::numeric_limits<float>::max();
+    for (float mass : d_masses) {
+        maxMass = std::max(mass, maxMass);
+        minMass = std::min(mass, minMass);
+    }
+    for (int i = 0; i < d_masses.size(); i++) {
+        d_masses[i] = (d_masses[i] - minMass) / (maxMass - minMass);
+    }
 }
 
 ResultFile::~ResultFile() {
@@ -28,7 +39,7 @@ ResultFile::~ResultFile() {
 }
 
 void ResultFile::seek(size_t frame) {
-    if (frame >= 0 && frame < d_count_frames) {
+    if (frame >= 0 && frame < d_count_frames && frame != d_current_frame) {
         d_stream.seekg(sizeof(size_t) + d_num_bodies * sizeof(float) + frame * 3 * d_num_bodies * sizeof(float),
            std::ios::beg);
         d_stream.read((char *) d_positions.data(), 3 * d_num_bodies * sizeof(float));

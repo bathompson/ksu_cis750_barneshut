@@ -37,6 +37,14 @@ void ImguiUI::layout() {
         ImGui::EndMenuBar();
     }
     ImGui::SliderInt("Time", &selectedFrame, 0, maxFrame);
+    ImGui::InputInt("Playback FPS", &playbackFPS, 1, 10);
+    if (!playing && ImGui::Button("Play")) {
+        playing = true;
+    }
+    if (playing && ImGui::Button("Pause")) {
+        playing = false;
+    }
+    ImGui::Text("Renderer FPS: %f", sceneFPS);
     ImGui::End();
 
     d_fileDialog->Display();
@@ -67,4 +75,5 @@ std::string ImguiUI::popFile() {
 void ImguiUI::setMaxFrame(int frame) {
     maxFrame = frame;
     selectedFrame = 0;
+    playing = false;
 }

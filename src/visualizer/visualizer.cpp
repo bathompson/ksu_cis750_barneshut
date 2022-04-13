@@ -8,22 +8,23 @@
 #include "camera_controller.h"
 #include "result_file.h"
 #include "imgui_ui.h"
+#include "texture.h"
 #include <memory>
+#include <cmrc/cmrc.hpp>
+
+CMRC_DECLARE(resources);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
-const std::string vs_source =
-#include "visualizer/shader/star_vertex.glsl"
-;
-
-const std::string fs_source =
-#include "visualizer/shader/star_fragment.glsl"
-;
-
 CameraController camera = CameraController(glm::vec3(0, 0, 3), glm::vec3(0, 0, -1.0));
 
 int main(int argc, char *argv[]) {
+    auto fs = cmrc::resources::get_filesystem();
+
+    std::string vs_source = fs.open("shader/star_vertex.glsl").begin();
+    std::string fs_source = fs.open("shader/star_fragment.glsl").begin();
+
     glfwInit();
     glfwWindowHint(GLFW_DOUBLEBUFFER , 1);
     glfwWindowHint(GLFW_DEPTH_BITS, 24);
@@ -48,6 +49,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    auto texFile = fs.open("textures/massgradient.png");
+    Texture massTexture = Texture(texFile.begin(), texFile.end());
+
     ShaderProgram shader = ShaderProgram(vs_source, fs_source);
     VertexBuffer<float> positionVbo = VertexBuffer<float>();
     VertexBuffer<float> massVbo = VertexBuffer<float>();
@@ -66,6 +70,7 @@ int main(int argc, char *argv[]) {
 
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
+    float timeSinceChange = 0.0f;
     while(!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
@@ -74,8 +79,10 @@ int main(int argc, char *argv[]) {
 
         camera.processInput(window, deltaTime);
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        ui.sceneFPS = 1.0f / deltaTime;
 
         if (ui.hasNewFile()) {
             results = std::make_shared<ResultFile>(ui.popFile());
@@ -83,14 +90,18 @@ int main(int argc, char *argv[]) {
         }
 
         if (results != nullptr) {
-            timeSinceSeek += deltaTime;
-            if (timeSinceSeek > SEEK_TIME_GAP) {
-                if (results->current_frame() + 1 < results->count_frames()) {
-                    //results.seek(results.current_frame() + 1);
-                } else {
-                    results->seek(0);
+            if (!ui.playing) {
+                results->seek(ui.selectedFrame);
+            } else {
+                timeSinceChange += deltaTime;
+                if (timeSinceChange > (1.0f / ui.playbackFPS)) {
+                    if (results->current_frame() + 1 >= results->count_frames()) {
+                        results->seek(0);
+                    } else {
+                        results->seek(results->current_frame() + 1);
+                    }
+                    timeSinceChange = 0;
                 }
-                timeSinceSeek = 0;
             }
 
             glBindVertexArray(vao);
@@ -102,7 +113,11 @@ int main(int argc, char *argv[]) {
             glEnableVertexAttribArray(1);
             glBindVertexArray(0);
 
+            glActiveTexture(GL_TEXTURE0);
+            massTexture.bind();
+
             shader.use();
+            shader.setUniformInt("massTexture", 0);
             shader.setUniformMat4("projection", camera.proj());
             shader.setUniformMat4("view", camera.view());
 

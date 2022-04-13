@@ -20,6 +20,13 @@ CPMAddPackage(
     DOWNLOAD_ONLY YES
 )
 
+cmrc_add_resource_library(
+    resources ALIAS resources::rc
+    shader/star_fragment.glsl
+    shader/star_vertex.glsl
+    textures/massgradient.png
+)
+
 aux_source_directory(${imgui_SOURCE_DIR} IMGUI_SOURCES)
 add_executable(visualizer
     shader_program.cpp shader_program.h
@@ -30,11 +37,13 @@ add_executable(visualizer
     ${IMGUI_SOURCES} ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.h ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
     visualizer.cpp
-)
+        texture.cpp texture.h)
 
+target_link_libraries(visualizer resources::rc)
 target_link_libraries(visualizer glfw)
 target_link_libraries(visualizer glad)
 target_link_libraries(visualizer glm::glm)
+target_link_options(visualizer PRIVATE -static-libgcc -static-libstdc++ -lstdc++ -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive)
 target_include_directories(visualizer PUBLIC ${stb_SOURCE_DIR})
 target_include_directories(visualizer PUBLIC ${imgui_SOURCE_DIR})
 target_include_directories(visualizer PUBLIC ${imgui-filebrowser_SOURCE_DIR})
