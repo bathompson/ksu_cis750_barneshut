@@ -1,33 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "VectorUtils.h"
+#include "../common/VectorUtils.h"
+#include "../common/fileIO_util.h"
 
-#define G 6.67430e-11
+#define G 1//6.67430e-11
 
-typedef struct
-{
-    Vec3f pos;
-    Vec3f vel;
-    float mass;
-} Body;
 
-Vec3f finalVel(Vec3f *accel, Vec3f *v0, double t)
-{
-    Vec3f ret;
-    ret.x = accel->x * t + v0->x;
-    ret.y = accel->y * t + v0->y;
-    ret.y = accel->y * t + v0->y;
-    return ret;
-}
 
-Vec3f finalPos(Vec3f *accel, Vec3f *v0, Vec3f *p0, double t)
-{
-    Vec3f ret;
-    ret.x = 1/2 * accel->x * t * t + v0->x * t + p0->x;
-    ret.y = 1/2 * accel->y * t * t + v0->y * t + p0->y;
-    ret.z = 1/2 * accel->z * t * t + v0->z * t + p0->z;
-    return ret;
-}
 
 int main(int argc, char **argv)
 {
@@ -41,7 +20,7 @@ int main(int argc, char **argv)
 
     if(argc < 5)
     {
-        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds>");
+        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds>\n");
         exit(0);
     }
 
@@ -50,48 +29,50 @@ int main(int argc, char **argv)
     timeSteps = strtoul(argv[3], NULL, 10);
     deltaT = atof(argv[4]);
     
+    data = fopen(filePath, "r");
 
     frames = (Body **) malloc(timeSteps * sizeof(Body *));
 
     for(size_t i = 0; i<timeSteps; i++)
     {
-        frames[i] = (Body *) malloc(timeSteps * sizeof(Body));
+        frames[i] = (Body *) malloc(bodyCount * sizeof(Body));
     }
 
-    char *line;
-    for(size_t i = 0; i<bodyCount; i++)
-    {
-        
-    }
+    readInput(data, frames[0], bodyCount);
+
+    fclose(data);
 
     for(size_t i = 0; i<timeSteps - 1; i++)
     {
         float t = i * deltaT;
         for(size_t j = 0; j<bodyCount; j++)
         {
-            Vec3f netForce;
-            newVec3f(0,0,0, &netForce);
+            Vec3f netForce = newVec3f(0,0,0);
             for(size_t k = 0; k<bodyCount; k++)
             {
                 if (j == k) continue;
 
-                Vec3f dist;
-                ptToVector(&frames[i][j].pos, &frames[i][k].pos, &dist);
-                double force = G * (frames[i][j].mass * frames[i][k].mass) / vectorDot(&dist, &dist);
-                vectorNormalize(&dist);
-                //dist is now a unit vector
-                vectorScalarMult(force, &dist);
-                vectorAdd(&netForce, &dist);
+                Vec3f dist = ptToVector(frames[i][j].pos, frames[i][k].pos);
+                double forceMag = G * (frames[i][j].mass * frames[i][k].mass) / vectorDot(dist, dist);
+                Vec3f dir = vectorNormalize(dist);
+                Vec3f force = vectorScalarMult(forceMag, dir);
+                netForce = vectorAdd(netForce, dist);
             }
-            vectorScalarMult(1/frames[i][j].mass, &netForce);
-            //netForce is now acceleration
+            Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;
-            frames[i+1][j].pos = finalPos(&netForce, &frames[i][j].vel, &frames[i][j].pos, t);
-            frames[i+1][j].vel = finalVel(&netForce, &frames[i][j].vel, t);
+            frames[i+1][j].pos = finalPos(netForce, frames[i][j].vel, frames[i][j].pos, t);
+            frames[i+1][j].vel = finalVel(netForce, frames[i][j].vel, t);
         }
     }
-    float masses[bodyCount];
-    Vec3f pos[timeSteps][bodyCount];
+    float *masses;
+    masses = (float *)malloc(bodyCount * sizeof(float));
+    Vec3f **pos;
+    pos = (Vec3f **)malloc(timeSteps * sizeof(Vec3f *));
+    for(size_t i = 0; i< timeSteps; i++)
+    {
+        pos[i] = (Vec3f *)malloc(bodyCount * sizeof(Vec3f));
+    }
+
     for(size_t i = 0; i<bodyCount; i++)
     {
         masses[i] = frames[0][i].mass;
@@ -99,26 +80,24 @@ int main(int argc, char **argv)
 
     for(size_t i = 0; i<timeSteps; i++)
     {
-        for(size_t j = 0; j<timeSteps; j++)
+        for(size_t j = 0; j<bodyCount; j++)
         {
             pos[i][j] = frames[i][j].pos;
         }
     }
 
     out = fopen("out.nbody", "wb");
-    fwrite(&bodyCount, sizeof(size_t), 1, out);
-    fwrite(masses, sizeof(float), bodyCount, out);
-    for(size_t i = 0; i<timeSteps; i++)
-    {
-        fwrite(pos[i], sizeof(Vec3f), bodyCount, out);
-    }
+    writeOutput(out, bodyCount, timeSteps, masses, pos);
     fclose(out);
 
     for(size_t i = 0; i < timeSteps; i++)
     {
         free(frames[i]);
+        free(pos[i]);
     }
 
     free(frames);
+    free(pos);
+    free(masses);
 
 }

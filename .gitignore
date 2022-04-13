@@ -75,3 +75,7 @@ _deps
 # IDE Files
 .idea/
 cmake-build-*/
+
+
+#N-Body simulation output files
+*.nbody
