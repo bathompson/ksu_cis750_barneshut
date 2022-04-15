@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
         float yBasis = createRandom(0, globalSize, 1);
         float zBasis = createRandom(0, globalSize, 1);
         for(int j = 0; j < (numBodiesInClusters / numClusters) + (numBodiesInClusters % numClusters < i ? 0 : 1); j++) {
+            printf("Having these prints make it so it will export when < 4085\n");
             Vec3f posVector;
             Vec3f velVector;
             Body b;
