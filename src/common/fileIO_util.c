@@ -23,7 +23,7 @@ void writeOutput(FILE *output, size_t xDim, size_t yDim, float *masses, Vec3f **
 void writeBodies(char* output, Body* bodies, size_t numBodies) {
     FILE* outputFile = fopen(output, "w");
     //Print out the data.
-    for(int i = 0; i < numBodies - 5; i++) {
+    for(int i = 0; i < numBodies; i++) {
         fprintf(outputFile, "%f,%f,%f,%f,%f,%f,%f\n", bodies[i].mass, bodies[i].pos.x, bodies[i].pos.y, bodies[i].pos.z, 
             bodies[i].vel.x, bodies[i].vel.y, bodies[i].vel.z);
             

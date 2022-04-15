@@ -5,9 +5,8 @@
 #include "../common/vector_utils.h"
 #include "../common/fileIO_util.h"
 
-float createRandom(float basisPoint, float scaleFactor);
-
-#define MAX_MASS 1000000000;
+float createRandom(float basisPoint, float scaleFactor, int enableInversion);
+float globalSize;
 
 /**
  * @brief Generates data for bodies.
@@ -21,12 +20,12 @@ float createRandom(float basisPoint, float scaleFactor);
  * @param argv 
  * @return int Exit code. 
  */
-void main(int argc, char **argv) {
+int main(int argc, char **argv) {
     //Declarations
-    float globalSize;
     float clusterDistRatio;
     float percentBodiesInClusters;
     float scaleFactor;
+    float maximumMass;
     size_t numBodies;
     size_t numClusters;
     size_t numFreeBodies;
@@ -35,11 +34,11 @@ void main(int argc, char **argv) {
     Body *bodies;
     
     //Check Arguments
-    if(argc != 6) {
+    if(argc != 7) {
         printf("Invalid input format. Format via: globalSize[0,sizeof(float)], ");
-        printf("numBodies[n], numClusters[n], percentBodiesInClusters[0,1], clusterDistRatio[0,1]\n");
-        printf("\nThe Program has exited with code -1.\n");
-        return;
+        printf("numBodies[n], numClusters[n], percentBodiesInClusters[0,1], clusterDistRatio[0,1], ");
+        printf("maximumMass[0, sizeof(float)]\n");
+        return -1;
     }
 
     //Convert input data.
@@ -48,6 +47,8 @@ void main(int argc, char **argv) {
     numClusters = strtoul(argv[3], NULL, 10);
     percentBodiesInClusters = atof(argv[4]);
     clusterDistRatio = atof(argv[5]);
+    maximumMass = atof(argv[6]);
+    scaleFactor = globalSize * clusterDistRatio;
 
     //Allocate memory, do some setup math, seed random.
     bodies = (Body*) (malloc(sizeof(Body) * numBodies));
@@ -60,14 +61,14 @@ void main(int argc, char **argv) {
         Vec3f posVector;
         Vec3f velVector;
         Body b;
-        posVector.x = createRandom(0, globalSize);
-        posVector.y = createRandom(0, globalSize);
-        posVector.z = createRandom(0, globalSize);
+        posVector.x = createRandom(0, globalSize, 1);
+        posVector.y = createRandom(0, globalSize, 1);
+        posVector.z = createRandom(0, globalSize, 1);
         //Max velocity in any direction is 10% of scale factor.
-        velVector.x = createRandom(0, globalSize * .1);
-        velVector.y = createRandom(0, globalSize * .1);
-        velVector.z = createRandom(0, globalSize * .1);
-        b.mass = ((float) rand() / (float) (RAND_MAX)) * MAX_MASS;
+        velVector.x = createRandom(0, globalSize * .1, 1);
+        velVector.y = createRandom(0, globalSize * .1, 1);
+        velVector.z = createRandom(0, globalSize * .1, 1);
+        b.mass = ((float) rand() / (float) (RAND_MAX)) * maximumMass;
         b.pos = posVector;
         b.vel = velVector;
 
@@ -75,25 +76,24 @@ void main(int argc, char **argv) {
     }
     
     //Calculate clusters
-    /*
     for(int i = 0; i < numClusters; i++) {
-        float xBasis = createRandom(0, globalSize);
-        float yBasis = createRandom(0, globalSize);
-        float zBasis = createRandom(0, globalSize);
-        scaleFactor = globalSize * clusterDistRatio;
+        float xBasis = createRandom(0, globalSize, 1);
+        float yBasis = createRandom(0, globalSize, 1);
+        float zBasis = createRandom(0, globalSize, 1);
         size_t bodiesInGivenCluster = (numBodiesInClusters / numClusters) + (numBodiesInClusters % numClusters < i ? 0 : 1);
         for(int j = 0; j < bodiesInGivenCluster; j++) {
+            printf("Test\n");
             Vec3f posVector;
             Vec3f velVector;
             Body b;
-            posVector.x = createRandom(xBasis, scaleFactor);
-            posVector.y = createRandom(yBasis, scaleFactor);
-            posVector.z = createRandom(zBasis, scaleFactor);
+            posVector.x = createRandom(xBasis, scaleFactor, 0);
+            posVector.y = createRandom(yBasis, scaleFactor, 0);
+            posVector.z = createRandom(zBasis, scaleFactor, 0);
             //Max velocity in any direction is 10% of scale factor.
-            velVector.x = createRandom(0, scaleFactor * .1);
-            velVector.y = createRandom(0, scaleFactor * .1);
-            velVector.z = createRandom(0, scaleFactor * .1);
-            b.mass = ((float) rand() / (float) (RAND_MAX)) * MAX_MASS;
+            velVector.x = createRandom(0, scaleFactor * .1, 0);
+            velVector.y = createRandom(0, scaleFactor * .1, 0);
+            velVector.z = createRandom(0, scaleFactor * .1, 0);
+            b.mass = ((float) rand() / (float) (RAND_MAX)) * maximumMass;
             b.pos = posVector;
             b.vel = velVector;
             
@@ -101,12 +101,14 @@ void main(int argc, char **argv) {
             yeet++;
         }
     }
-    */
+    
     //Export as a text file.
     writeBodies("outputFile.csv", bodies, numBodies);
 
     //Free memory
     free(bodies);
+
+    return 0;
 }
 
 /**
@@ -114,10 +116,14 @@ void main(int argc, char **argv) {
  * 
  * @param basisPoint The center point to base the values around.
  * @param scaleFactor The range of the values from around the basis point.
+ * @param enableInversion Enable inverting the polarity.
  * @return float The random float.
  */
-float createRandom(float basisPoint, float scaleFactor) {
-    float ret = (basisPoint + ((float) rand() / (float) (RAND_MAX))) * scaleFactor;
-    ret *= ((rand() % 2) * -1);
+float createRandom(float basisPoint, float scaleFactor, int enableInversion) {
+    float ret; 
+    do {
+        ret = basisPoint + (((float) rand() / (float) (RAND_MAX)) * scaleFactor);
+    } while(abs(ret) > globalSize);
+    ret *= enableInversion ? ((rand() % 2) ? -1 : 1) : 1;
     return ret;
 }
