@@ -82,7 +82,8 @@ int main(int argc, char **argv) {
         float zBasis = createRandom(0, globalSize, 1);
         size_t bodiesInGivenCluster = (numBodiesInClusters / numClusters) + (numBodiesInClusters % numClusters < i ? 0 : 1);
         for(int j = 0; j < bodiesInGivenCluster; j++) {
-            printf("Test\n");
+            //TODO: Figure out why we get nothing exported without this print statement.
+            printf("Some reason this is needed?\n");
             Vec3f posVector;
             Vec3f velVector;
             Body b;
@@ -106,6 +107,7 @@ int main(int argc, char **argv) {
     writeBodies("outputFile.csv", bodies, numBodies);
 
     //Free memory
+    //TODO: Figure out why we are getting this memory error.
     free(bodies);
 
     return 0;
