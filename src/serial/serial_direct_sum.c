@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "../common/vector_utils.h"
-#include "../common/fileIO_util.h"
+#include "vector_utils.h"
+#include "fileIO_util.h"
 
 #define G 1//6.67430e-11
 

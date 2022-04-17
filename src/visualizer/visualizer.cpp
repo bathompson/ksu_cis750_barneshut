@@ -18,6 +18,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 CameraController camera = CameraController(glm::vec3(0, 0, 3), glm::vec3(0, 0, -1.0));
+int screenWidth, screenHeight;
 
 int main(int argc, char *argv[]) {
     auto fs = cmrc::resources::get_filesystem();
@@ -34,6 +35,8 @@ int main(int argc, char *argv[]) {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "N-Body Simulation", nullptr, nullptr);
+    screenWidth = 800;
+    screenHeight = 600;
     if (window == nullptr) {
         glfwTerminate();
         return -1;
@@ -49,8 +52,11 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    auto texFile = fs.open("textures/massgradient.png");
-    Texture massTexture = Texture(texFile.begin(), texFile.end());
+    auto massTexFile = fs.open("textures/massgradient.png");
+    Texture massTexture = Texture(massTexFile.begin(), massTexFile.end(), 0);
+
+    auto starTexFile = fs.open("textures/light.png");
+    Texture starTexture = Texture(starTexFile.begin(), starTexFile.end(), 1);
 
     ShaderProgram shader = ShaderProgram(vs_source, fs_source);
     VertexBuffer<float> positionVbo = VertexBuffer<float>();
@@ -104,6 +110,9 @@ int main(int argc, char *argv[]) {
                 }
             }
 
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
             glBindVertexArray(vao);
             positionVbo.bind(results->positions(), results->num_bodies() * 3);
             StarPositionVertex::setAttribPointers();
@@ -113,13 +122,12 @@ int main(int argc, char *argv[]) {
             glEnableVertexAttribArray(1);
             glBindVertexArray(0);
 
-            glActiveTexture(GL_TEXTURE0);
-            massTexture.bind();
-
             shader.use();
             shader.setUniformInt("massTexture", 0);
+            shader.setUniformInt("starTexture", 1);
             shader.setUniformMat4("projection", camera.proj());
             shader.setUniformMat4("view", camera.view());
+            shader.setUniformFloat("screenScale", screenHeight / 1080.0f);
 
             glBindVertexArray(vao);
             glDrawArrays(GL_POINTS, 0, results->num_bodies());
@@ -145,6 +153,8 @@ int main(int argc, char *argv[]) {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
     camera.updateSize(width, height);
+    screenWidth = width;
+    screenHeight = height;
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {

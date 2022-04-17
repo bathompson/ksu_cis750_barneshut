@@ -25,6 +25,7 @@ cmrc_add_resource_library(
     shader/star_fragment.glsl
     shader/star_vertex.glsl
     textures/massgradient.png
+    textures/light.png
 )
 
 aux_source_directory(${imgui_SOURCE_DIR} IMGUI_SOURCES)
@@ -36,8 +37,7 @@ add_executable(visualizer
     imgui_ui.cpp imgui_ui.h
     ${IMGUI_SOURCES} ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.h ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
-    visualizer.cpp
-        texture.cpp texture.h)
+    visualizer.cpp texture.cpp texture.h)
 
 target_link_libraries(visualizer resources::rc)
 target_link_libraries(visualizer glfw)

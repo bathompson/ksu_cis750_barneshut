@@ -3,7 +3,7 @@
 class Texture {
 
 public:
-    Texture(const char* start, const char* end);
+    Texture(const char* start, const char* end, int textureOffset);
     ~Texture();
 
     void bind() const;

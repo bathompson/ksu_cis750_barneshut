@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
-#include "../common/vector_utils.h"
-#include "../common/fileIO_util.h"
+#include "vector_utils.h"
+#include "fileIO_util.h"
 
 /**
  * @brief Create a random float.
