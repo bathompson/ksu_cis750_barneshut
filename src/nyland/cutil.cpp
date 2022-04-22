@@ -1149,32 +1149,6 @@ cutGetCmdLineArgumentstr( const int argc, const char** argv,
     return ret_val;
 
 }
-////////////////////////////////////////////////////////////////////////////////
-//! Check for OpenGL error
-//! @return CUTTrue if no GL error has been encountered, otherwise 0
-//! @param file  __FILE__ macro
-//! @param line  __LINE__ macro
-//! @note The GL error is listed on stderr
-////////////////////////////////////////////////////////////////////////////////
-CUTBoolean
-cutCheckErrorGL( const char* file, const int line) 
-{
-    CUTBoolean ret_val = CUTTrue;
-
-    try 
-    {
-        // check for error
-        ErrorChecker::checkErrorGL( file, line);
-    }
-    catch( const std::exception& ex) 
-    {
-        // print where the exception occured
-        std::cerr << ex.what() << std::endl;
-        ret_val = CUTFalse;
-    }
-
-    return ret_val;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Extended assert

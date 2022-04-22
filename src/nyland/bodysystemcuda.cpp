@@ -37,23 +37,19 @@
 #include <cstdio>
 #include <cstdlib>
 #include <algorithm>
-#include <GL/glew.h>
 
 extern "C"
 {
     void checkCUDA();
     void setDeviceSoftening(float softening);
-    void allocateNBodyArrays(float* vel[2], int numBodies);
-    void deleteNBodyArrays(float* vel[2]);
+    void allocateNBodyArrays(float* vel[2], float* pos[2], int numBodies);
+    void deleteNBodyArrays(float* vel[2], float* pos[2]);
     void integrateNbodySystem(float* newPos, float* newVel, 
                               float* oldPos, float* oldVel,
-                              unsigned int pboOldPos, unsigned int pboNewPos,
                               float deltaTime, float damping, 
                               int numBodies, int p, int q);
-    void copyArrayFromDevice(float* host, const float* device, unsigned int pbo, int numBodies);
+    void copyArrayFromDevice(float* host, const float* device, int numBodies);
     void copyArrayToDevice(float* device, const float* host, int numBodies);
-    void registerGLBufferObject(unsigned int pbo);
-    void unregisterGLBufferObject(unsigned int pbo);
 }
 
 
@@ -113,24 +109,7 @@ BodySystemCUDA::_initialize(int numBodies)
     memset(m_hPos, 0, m_numBodies*4*sizeof(float));
     memset(m_hVel, 0, m_numBodies*4*sizeof(float));
 
-    // create the position pixel buffer objects for rendering
-    // we will actually compute directly from this memory in CUDA too
-    glGenBuffers(2, m_pbo);   
-    for (int i = 0; i < 2; ++i)
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, m_pbo[i]);
-        glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(float) * m_numBodies, 
-                     m_hPos, GL_DYNAMIC_DRAW);
-
-        int size = 0;
-        glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size); 
-        if ((unsigned)size != 4 * (sizeof(float) * m_numBodies))
-            fprintf(stderr, "WARNING: Pixel Buffer Object allocation failed!n");
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        registerGLBufferObject(m_pbo[i]);
-    }
-
-    allocateNBodyArrays(m_dVel, m_numBodies);
+    allocateNBodyArrays(m_dVel, m_dPos, m_numBodies);
 
     CUT_SAFE_CALL(cutCreateTimer(&m_timer));
 
@@ -145,10 +124,7 @@ BodySystemCUDA::_finalize()
     delete [] m_hPos;
     delete [] m_hVel;
 
-    deleteNBodyArrays(m_dVel);
-    unregisterGLBufferObject(m_pbo[0]);
-    unregisterGLBufferObject(m_pbo[1]);
-    glDeleteBuffers(2, m_pbo);
+    deleteNBodyArrays(m_dVel, m_dPos);
 }
 
 void
@@ -173,7 +149,6 @@ BodySystemCUDA::update(float deltaTime)
     
     integrateNbodySystem(m_dPos[m_currentWrite], m_dVel[m_currentWrite], 
                          m_dPos[m_currentRead], m_dVel[m_currentRead],
-                         m_pbo[m_currentRead], m_pbo[m_currentWrite],
                          deltaTime, m_damping, m_numBodies, m_p, m_q);
     CUT_SAFE_CALL( cutStopTimer(m_timer));
 
@@ -190,15 +165,12 @@ BodySystemCUDA::getArray(BodyArray array)
     float* hdata = 0;
     float* ddata = 0;
 
-    unsigned int pbo = 0;
-
     switch (array)
     {
     default:
     case BODYSYSTEM_POSITION:
         hdata = m_hPos;
         ddata = m_dPos[m_currentRead];
-        pbo = m_pbo[m_currentRead];
         break;
     case BODYSYSTEM_VELOCITY:
         hdata = m_hVel;
@@ -206,7 +178,7 @@ BodySystemCUDA::getArray(BodyArray array)
         break;
     }
 
-    copyArrayFromDevice(hdata, ddata, pbo, m_numBodies);
+    copyArrayFromDevice(hdata, ddata, m_numBodies);
     return hdata;
 }
 
@@ -219,19 +191,7 @@ BodySystemCUDA::setArray(BodyArray array, const float* data)
     {
     default:
     case BODYSYSTEM_POSITION:
-        {
-            unregisterGLBufferObject(m_pbo[m_currentRead]);
-            glBindBuffer(GL_ARRAY_BUFFER, m_pbo[m_currentRead]);
-            glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(float) * m_numBodies, 
-                        data, GL_DYNAMIC_DRAW);
-
-            int size = 0;
-            glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size); 
-            if ((unsigned)size != 4 * (sizeof(float) * m_numBodies))
-                fprintf(stderr, "WARNING: Pixel Buffer Object download failed!n");
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            registerGLBufferObject(m_pbo[m_currentRead]);
-        }
+        copyArrayToDevice(m_dPos[m_currentRead], data, m_numBodies);
         break;
     case BODYSYSTEM_VELOCITY:
         copyArrayToDevice(m_dVel[m_currentRead], data, m_numBodies);

@@ -47,9 +47,6 @@ class ErrorChecker
 {
 public:
 
-    //! Check for OpenGL errors (including GLSLang).
-    static void checkErrorGL(const char* file = "-" , const int line = -1);
-
     //! Check if a condition is true.
     //! @note In prinicple has the same functionality as assert but allows 
     //!       much better control this version prints an error and terminates

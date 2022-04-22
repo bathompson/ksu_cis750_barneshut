@@ -32,8 +32,6 @@
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
-#include <GL/glut.h>
-#include <cuda_gl_interop.h>
 
 extern "C"
 {
@@ -52,28 +50,28 @@ void setDeviceSoftening(float softening)
     //CUDA_SAFE_CALL(cudaMemcpyToSymbol("softeningSquared", &softeningSq, sizeof(float), 0));
 }
 
-void allocateNBodyArrays(float* vel[2], int numBodies)
+void allocateNBodyArrays(float* vel[2], float* pos[2], int numBodies)
 {
     // 4 floats each for alignment reasons
     unsigned int memSize = sizeof( float) * 4 * numBodies;
     
     CUDA_SAFE_CALL(cudaMalloc((void**)&vel[0], memSize));
     CUDA_SAFE_CALL(cudaMalloc((void**)&vel[1], memSize));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&pos[0], memSize));
+    CUDA_SAFE_CALL(cudaMalloc((void**)&pos[1], memSize));
 }
 
-void deleteNBodyArrays(float* vel[2])
+void deleteNBodyArrays(float* vel[2], float* pos[2])
 {
     CUDA_SAFE_CALL(cudaFree((void**)vel[0]));
     CUDA_SAFE_CALL(cudaFree((void**)vel[1]));
+    CUDA_SAFE_CALL(cudaFree((void**)pos[0]));
+    CUDA_SAFE_CALL(cudaFree((void**)pos[1]));
 }
 
-void copyArrayFromDevice(float* host, const float* device, unsigned int pbo, int numBodies)
-{   
-    if (pbo)
-        CUDA_SAFE_CALL(cudaGLMapBufferObject((void**)&device, pbo));
+void copyArrayFromDevice(float* host, const float* device, int numBodies)
+{
     CUDA_SAFE_CALL(cudaMemcpy(host, device, numBodies*4*sizeof(float), cudaMemcpyDeviceToHost));
-    if (pbo)
-        CUDA_SAFE_CALL(cudaGLUnmapBufferObject(pbo));
 }
 
 void copyArrayToDevice(float* device, const float* host, int numBodies)
@@ -81,20 +79,9 @@ void copyArrayToDevice(float* device, const float* host, int numBodies)
     CUDA_SAFE_CALL(cudaMemcpy(device, host, numBodies*4*sizeof(float), cudaMemcpyHostToDevice));
 }
 
-void registerGLBufferObject(unsigned int pbo)
-{
-    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(pbo));
-}
-
-void unregisterGLBufferObject(unsigned int pbo)
-{
-    CUDA_SAFE_CALL(cudaGLUnregisterBufferObject(pbo));
-}
-
 void 
 integrateNbodySystem(float* newPos, float* newVel, 
-                     float* oldPos, float* oldVel, 
-                     unsigned int pboOldPos, unsigned int pboNewPos, 
+                     float* oldPos, float* oldVel,
                      float deltaTime, float damping, 
                      int numBodies, int p, int q)
 {
@@ -102,9 +89,6 @@ integrateNbodySystem(float* newPos, float* newVel,
     
     dim3 threads(p,q,1);
     dim3 grid(numBodies/p, 1, 1);
-
-    CUDA_SAFE_CALL(cudaGLMapBufferObject((void**)&oldPos, pboOldPos));
-    CUDA_SAFE_CALL(cudaGLMapBufferObject((void**)&newPos, pboNewPos));
 
     // execute the kernel:
 
@@ -135,9 +119,6 @@ integrateNbodySystem(float* newPos, float* newVel,
     
     // check if kernel invocation generated an error
     CUT_CHECK_ERROR("Kernel execution failed");
-
-    CUDA_SAFE_CALL(cudaGLUnmapBufferObject(pboNewPos));
-    CUDA_SAFE_CALL(cudaGLUnmapBufferObject(pboOldPos));
 
     
 }
