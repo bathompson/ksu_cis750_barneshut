@@ -32,6 +32,7 @@
 #include <algorithm>
 #include <math.h>
 #include <cutil.h>
+#include <string>
 
 #include "bodysystemcuda.h"
 #include "bodysystemcpu.h"
@@ -59,6 +60,7 @@ int numIterations = 0; // run until exit
 
 float clusterScale = 1.54f;
 float velocityScale = 8.f;
+std::string inputFilePath;
 float damping = 1.0f; // no damping by default
 float softening = 0.1f;
 float timestep = 0.016f;
@@ -77,7 +79,8 @@ unsigned int timer = 0;
 void reset(BodySystem *system, int numBodies, NBodyConfig config)
 {
     // initalize the memory
-    randomizeBodies(config, hPos, hVel, hColor, clusterScale, velocityScale, numBodies);
+    //randomizeBodies(config, hPos, hVel, hColor, clusterScale, velocityScale, numBodies);
+    loadInputFile(inputFilePath, hPos, hVel, hColor, numBodies);
 
     system->setArray(BodySystem::BODYSYSTEM_POSITION, hPos);
     system->setArray(BodySystem::BODYSYSTEM_VELOCITY, hVel);
@@ -209,6 +212,9 @@ main( int argc, char** argv)
     cutGetCmdLineArgumenti( argc, (const char**) argv, "i", &numIterations);
     cutGetCmdLineArgumenti( argc, (const char**) argv, "p", &p);
     cutGetCmdLineArgumenti( argc, (const char**) argv, "q", &q);
+    char* fPath;
+    cutGetCmdLineArgumentstr(argc, (const char**) argv, "f", &fPath);
+    inputFilePath = fPath;
 
     bool compareToCPU = cutCheckCmdLineFlag( argc, (const char**) argv, "compare") != 0;
     bool regression = cutCheckCmdLineFlag( argc, (const char**) argv, "regression") != 0;

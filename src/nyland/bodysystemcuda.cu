@@ -116,10 +116,11 @@ integrateNbodySystem(float* newPos, float* newVel,
                                                                   (float4*)oldPos, (float4*)oldVel,
                                                                    deltaTime, damping, numBodies);
     }
-    
+
+    cudaDeviceSynchronize();
+
     // check if kernel invocation generated an error
     CUT_CHECK_ERROR("Kernel execution failed");
-
     
 }
 

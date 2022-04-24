@@ -36,6 +36,11 @@
 #include <stdio.h>
 #include <cutil.h>
 #include <algorithm>
+#include <string>
+extern "C"
+{
+#include "common/fileIO_util.h"
+}
 
 BodySystemCPU::BodySystemCPU(int numBodies)
 : BodySystem(numBodies),
@@ -268,6 +273,49 @@ cross(float3 v0, float3 v1)
 	rt.y = v0.z*v1.x-v0.x*v1.z;
 	rt.z = v0.x*v1.y-v0.y*v1.x;	
     return rt;
+}
+
+void loadInputFile(const std::string& filepath, float* pos, float* vel, float* color, int numBodies)
+{
+    FILE* data = fopen(filepath.c_str(), "r");
+    Body* initialBodies = (Body*) malloc(sizeof(Body) * numBodies);
+    readInput(data, initialBodies, (size_t) numBodies);
+    fclose(data);
+
+    int p = 0, v = 0;
+    for (int i = 0; i < numBodies; i++)
+    {
+        float3 point;
+        point.x = initialBodies[i].pos.x;
+        point.y = initialBodies[i].pos.y;
+        point.z = initialBodies[i].pos.z;
+        float3 velocity;
+        velocity.x = initialBodies[i].vel.x;
+        velocity.y = initialBodies[i].vel.y;
+        velocity.z = initialBodies[i].vel.z;
+
+        pos[p++] = point.x; // pos.x
+        pos[p++] = point.y; // pos.y
+        pos[p++] = point.z; // pos.z
+        pos[p++] = initialBodies[i].mass; // mass
+
+        vel[v++] = velocity.x; // pos.x
+        vel[v++] = velocity.y; // pos.x
+        vel[v++] = velocity.z; // pos.x
+        vel[v++] = 1.0f / initialBodies[i].mass; // inverse mass
+    }
+
+    if (color)
+    {
+        int v = 0;
+        for(int i=0; i < numBodies; i++)
+        {
+            color[v++] = rand() / (float) RAND_MAX;
+            color[v++] = rand() / (float) RAND_MAX;
+            color[v++] = rand() / (float) RAND_MAX;
+            color[v++] = 1.0f;
+        }
+    }
 }
 
 // utility function

@@ -1,6 +1,8 @@
 #ifndef __BODYSYSTEM_H__
 #define __BODYSYSTEM_H__
 
+#include <string>
+
 enum NBodyConfig
 {
 	NBODY_CONFIG_RANDOM,
@@ -11,6 +13,7 @@ enum NBodyConfig
 
 // utility function
 void randomizeBodies(NBodyConfig config, float* pos, float* vel, float* color, float clusterScale, float velocityScale, int numBodies);
+void loadInputFile(const std::string& filepath, float* pos, float* vel, float* color, int numBodies);
 
 // BodySystem abstract base class
 class BodySystem
