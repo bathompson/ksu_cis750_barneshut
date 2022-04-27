@@ -41,6 +41,7 @@
 #include <iostream>
 #include <algorithm>
 #include <math.h>
+#include <cstring>
 
 // includes, cuda
 #include <builtin_types.h>

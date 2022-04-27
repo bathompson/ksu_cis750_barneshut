@@ -884,7 +884,7 @@ int main(int argc, char* argv[])
     // run timesteps (launch GPU kernels)
 
     cudaEventCreate(&start);  cudaEventCreate(&stop);
-    std::chrono::time_point<std::chrono::steady_clock> starttime, endtime;
+    std::chrono::system_clock::time_point starttime, endtime;
     starttime = std::chrono::high_resolution_clock::now();
 
     cudaEventRecord(start, 0);

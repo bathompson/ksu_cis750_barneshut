@@ -1,3 +1,8 @@
+# Ignore anything without an extension
+*
+!*/
+!*.*
+
 # Prerequisites
 *.d
 
@@ -82,3 +87,15 @@ cmake-build-*/
 
 #CSV
 *.csv
+
+# General compilation output files on Beocat
+_cmrc/
+cmake/
+cpm-package-lock.cmake
+
+# Target outputs on Beocat
+src/burtscher/burtcher_cuda_implementation
+burtscher_cuda_implementation
+src/nyland/nyland_cuda_implementation
+nyland_cuda_implementation
+src/serial/serial_direct_sum
