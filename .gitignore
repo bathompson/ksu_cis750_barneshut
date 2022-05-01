@@ -99,3 +99,5 @@ burtscher_cuda_implementation
 src/nyland/nyland_cuda_implementation
 nyland_cuda_implementation
 src/serial/serial_direct_sum
+compare_outputs
+src/test/compare_outputs
