@@ -65,3 +65,19 @@ Vec3f ptToVector(Vec3f p1, Vec3f p2);
 Vec3f finalVel(Vec3f accel, Vec3f v0, double t);
 
 Vec3f finalPos(Vec3f accel, Vec3f v0, Vec3f p0, double t);
+
+/**
+ * @brief Takes a root and child addition bodies. Combines the data from the child and updates the root mass and center of mass.
+ * 
+ * @param rt The root body.
+ * @param cd The added body.
+ * 
+ * @return Body*
+ */
+Body combineMass(Body rt, Body cd);
+
+/**
+ * @brief Creates a new empty body.
+ * 
+ */
+Body newEmptyBody();

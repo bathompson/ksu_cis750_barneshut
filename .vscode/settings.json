@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "gsl_vector_float.h": "c",
-        "fileio_util.h": "c",
-        "math.h": "c",
-        "vector_utils.h": "c"
-    }
-}

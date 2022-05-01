@@ -40,3 +40,23 @@ Vec3f finalPos(Vec3f accel, Vec3f v0, Vec3f p0, double t) {
 float vectorDot(Vec3f u, Vec3f v) {
     return u.x * v.x + u.y * v.y + u.z * v.z;
 }
+
+Body combineMass(Body rt, Body cd) {
+    //Total mass is sum
+    //CM = (x1m1 + x2m2)/(m1 + m2)
+    Body newMass;
+    newMass.mass = rt.mass + cd.mass;
+    newMass.pos.x = ((rt.mass * rt.pos.x) + (cd.mass * cd.pos.x)) / (rt.mass + cd.mass);
+    newMass.pos.y = ((rt.mass * rt.pos.y) + (cd.mass * cd.pos.y)) / (rt.mass + cd.mass);
+    newMass.pos.z = ((rt.mass * rt.pos.z) + (cd.mass * cd.pos.z)) / (rt.mass + cd.mass);
+
+    return newMass;
+}
+
+Body newEmptyBody() {
+    Body b;
+    b.mass = 0;
+    b.pos = newVec3f(0, 0, 0);
+    b.vel = newVec3f(0, 0, 0);
+    return b;
+}
