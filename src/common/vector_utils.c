@@ -1,5 +1,5 @@
-#include "vector_utils.h"
 #include <math.h>
+#include "vector_utils.h"
 
 Vec3f newVec3f(float x, float y, float z) {
     Vec3f ret;
@@ -39,6 +39,11 @@ Vec3f finalPos(Vec3f accel, Vec3f v0, Vec3f p0, double t) {
 
 float vectorDot(Vec3f u, Vec3f v) {
     return u.x * v.x + u.y * v.y + u.z * v.z;
+}
+
+float distanceBetweenPoints(Vec3f u, Vec3f v) {
+    return sqrt(u.x * v.x + u.y * v.y + u.z * v.z);
+
 }
 
 Body combineMass(Body rt, Body cd) {

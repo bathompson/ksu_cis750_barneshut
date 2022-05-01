@@ -47,6 +47,15 @@ Vec3f vectorScalarMult(float t, Vec3f u);
 float vectorDot(Vec3f u, Vec3f v);
 
 /**
+ * @brief Computes the distance betwwen two points
+ * 
+ * @param u Point 1
+ * @param v Point 2
+ * @return float 
+ */
+float distanceBetweenPoints(Vec3f u, Vec3f v);
+
+/**
  * @brief Converts vector u to a unit vector
  * 
  * @param u 

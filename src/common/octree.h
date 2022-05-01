@@ -1,5 +1,4 @@
 #pragma once
-
 #include "vector_utils.h"
 
 typedef struct Octree {

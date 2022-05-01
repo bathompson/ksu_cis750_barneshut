@@ -3,7 +3,7 @@
 #include "vector_utils.h"
 #include "octree.h"
 
-#define MAX_TREE_DIAMETER 10000
+#define MAX_TREE_DIAMETER 100000
 
 Octree* insertElement(Octree* root, Body newBody) {
     //If tree does not exist.
@@ -13,8 +13,9 @@ Octree* insertElement(Octree* root, Body newBody) {
         Octree* retTree;
         float radHalf = MAX_TREE_DIAMETER / 2;
         retTree = bodyToOctree(emptyBody, 0, 0, 0, radHalf);
+        retTree->rad = radHalf;
         root = retTree;
-    }
+    } 
 
     //Get the octant it needs to be in.
     int octant = getOctantVector(newBody, root->centerPosition);
@@ -47,8 +48,8 @@ Octree* bodyToOctree(Body body, float x, float y, float z, float rad) {
     newTree->centerOfMass.pos = body.pos;
     newTree->centerOfMass.vel = body.vel;
     newTree->centerPosition.x = x;
-    newTree->centerPosition.x = y;
-    newTree->centerPosition.x = z;
+    newTree->centerPosition.y = y;
+    newTree->centerPosition.z = z;
     newTree->rad = rad;
     newTree->singleBody = 1;
     //return the tree.
@@ -62,8 +63,6 @@ Octree* subdivideOctree(Octree* rootTree, Body newBody) {
     int rootOctant = getOctantVector(rootTree->centerOfMass, rootTree->centerPosition);
     int newOctant = getOctantVector(newBody, rootTree->centerPosition);
     if(rootOctant == newOctant) {
-        //TODO: Handle potential infinite recursion if 2 spots are the exact same.
-        //Do via a minimum distance between points sort of deal. If it is not that value, combine mass and make single object or something.
         float radHalf = rootTree->rad / 2;
         float x = rootTree->centerPosition.x + radHalf * (newBody.pos.x > rootTree->centerPosition.x ? 1 : -1);
         float y = rootTree->centerPosition.y + radHalf * (newBody.pos.y > rootTree->centerPosition.y ? 1 : -1);
@@ -73,7 +72,7 @@ Octree* subdivideOctree(Octree* rootTree, Body newBody) {
         //Create sub-trees with the body that was center of mass, and the new body.
         rootTree->bodies[rootOctant] = bodyToOctree(rootTree->centerOfMass, rootTree->centerPosition.x, 
             rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->rad);
-        rootTree->bodies[newOctant] = bodyToOctree(newBody,  rootTree->centerPosition.x, 
+        rootTree->bodies[newOctant] = bodyToOctree(newBody, rootTree->centerPosition.x, 
             rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->rad);
     }
     rootTree->centerOfMass = combineMass(rootTree->centerOfMass, newBody);
@@ -92,7 +91,7 @@ int getOctantPosition(Body body, int x, int y, int z) {
         ret = body.pos.y >= y ? 2 : 3;
     }
     ret += body.pos.z >= z ? 0 : 4;
-    return ret;
+    return ret - 1;
 }
 
 void _debugPrint(Octree* root, int leadingSpaces) {
