@@ -2,8 +2,14 @@
 #include <stdio.h>
 #include "vector_utils.h"
 #include "fileIO_util.h"
+#include "../common/octree.h"
 
 #define G 6.67430e-11
+
+// float computeBarnesHutForce(Octree *root, Body *body, float theta)
+// {
+//     float dist = vec
+// }
 
 int main(int argc, char **argv) {
     //Declarations
