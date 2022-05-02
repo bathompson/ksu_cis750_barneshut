@@ -9,6 +9,10 @@
 
 Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
 {
+    if(root == NULL)
+    {
+        return newVec3f(0,0,0);
+    }
     double scalarForce = 0;
     Vec3f vectorDist = ptToVector(body->pos, root->massPosition);
     float distSq = vectorDot(vectorDist, vectorDist);
