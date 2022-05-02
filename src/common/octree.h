@@ -76,3 +76,11 @@ int getOctantPosition(Vec3f position, int x, int y, int z);
  * @param leadingSpaces the amount of spaces to lead the prints with (used to see children easier).
  */
 void _debugPrint(Octree* root, int leadingSpaces);
+
+/**
+ * @brief Frees a tree
+ * 
+ * @param root the root of the tree to be freed
+ */
+void freeTree(Octree *root);
+
