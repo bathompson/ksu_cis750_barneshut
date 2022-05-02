@@ -884,8 +884,7 @@ int main(int argc, char* argv[])
     // run timesteps (launch GPU kernels)
 
     cudaEventCreate(&start);  cudaEventCreate(&stop);
-    std::chrono::system_clock::time_point starttime, endtime;
-    starttime = std::chrono::high_resolution_clock::now();
+    auto starttime = std::chrono::high_resolution_clock::now();
 
     cudaEventRecord(start, 0);
     InitializationKernel<<<1, 1>>>();
@@ -935,7 +934,7 @@ int main(int argc, char* argv[])
     CudaTest("kernel launch failed");
     cudaEventDestroy(start);  cudaEventDestroy(stop);
 
-    endtime = std::chrono::high_resolution_clock::now();
+    auto endtime = std::chrono::high_resolution_clock::now();
     runtime = std::chrono::duration_cast<std::chrono::milliseconds>(endtime - starttime).count() / 1000.0;
 
     printf("runtime: %.4lf s  (", runtime);

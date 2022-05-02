@@ -53,7 +53,7 @@ enum { M_VIEW = 0, M_MOVE };
 #ifdef __DEVICE_EMULATION__
 int numBodies = 1024;
 #else
-int numBodies = 4096;
+int numBodies = 65536;
 #endif
 
 int numIterations = 0; // run until exit
