@@ -3,17 +3,13 @@
 #include "vector_utils.h"
 #include "octree.h"
 
-#define MAX_TREE_DIAMETER 100000
-
+#define MAX_TREE_DIAMETER __FLT_MAX__
 Octree* insertElement(Octree* root, Vec3f newVector, float mass) {
     //If tree does not exist.
     if(root == NULL) {
         //Create tree and set all values to be defaults.
-        Octree* retTree;
-        float rad = MAX_TREE_DIAMETER / 2;
-        retTree = vectorToOctree(newVec3f(0, 0, 0), 0, 0, 0, 0, rad);
-        retTree->dist = rad;
-        root = retTree;
+        Octree* retTree = vectorToOctree(newVector, mass, 0, 0, 0, MAX_TREE_DIAMETER / 2);
+        return retTree;
     }
 
     //Get the octant it needs to be in.
@@ -29,7 +25,7 @@ Octree* insertElement(Octree* root, Vec3f newVector, float mass) {
         root->singleBody = 0;
     } else if(root->bodies[octant]->singleBody == 1) {
         //When there is already a single body there, subdivide the tree.
-        root->bodies[octant] = subdivideOctree(root->bodies[octant], newVector, mass);
+        root->bodies[octant] = subdivideOctree(root->bodies[octant], newVector, mass, 0);
     } else {
         //If octant is not a single body, and is not null, recursive call.
         root->bodies[octant] = insertElement(root->bodies[octant], newVector, mass);
@@ -52,22 +48,27 @@ Octree* vectorToOctree(Vec3f vector, float mass, float x, float y, float z, floa
     newTree->centerPosition.z = z;
     newTree->dist = dist;
     newTree->singleBody = 1;
+    for(size_t i = 0; i < 8; i++) {
+        newTree->bodies[i] = NULL;
+    }
     //return the tree.
     return newTree;
 }
 
-Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass) {
+Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass, int ct) {
     //Mark it as no longer a single body.
     rootTree->singleBody = 0;
     //Get the octant of the root and new body.
     int rootOctant = getOctantVector(rootTree->massPosition, rootTree->centerPosition);
     int newOctant = getOctantVector(newBody, rootTree->centerPosition);
+    //printf("Octants are %d %d\n", rootOctant, newOctant);
     if(rootOctant == newOctant) {
-        float radHalf = rootTree->dist / 2;
-        float x = rootTree->centerPosition.x + radHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1);
-        float y = rootTree->centerPosition.y + radHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1);
-        float z = rootTree->centerPosition.z + radHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1);
-        rootTree->bodies[rootOctant] = subdivideOctree(vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, radHalf), newBody, mass);
+        float distHalf = rootTree->dist / 2;
+        float x = rootTree->centerPosition.x + (distHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1));
+        float y = rootTree->centerPosition.y + (distHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1));
+        float z = rootTree->centerPosition.z + (distHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1));
+        //printf("X, Y, Z %f %f %f\n", x, y, z);
+        rootTree->bodies[rootOctant] = subdivideOctree(vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf), newBody, mass, ct + 1);
     } else {
         //Create sub-trees with the body that was center of mass, and the new body.
         rootTree->bodies[rootOctant] = vectorToOctree(rootTree->massPosition, rootTree->mass, rootTree->centerPosition.x, 
@@ -85,7 +86,7 @@ int getOctantVector(Vec3f position, Vec3f centerPosition) {
     return getOctantPosition(position, centerPosition.x, centerPosition.y, centerPosition.z);
 }
 
-int getOctantPosition(Vec3f position, int x, int y, int z) {
+int getOctantPosition(Vec3f position, float x, float y, float z) {
     int ret = 0;
     if(position.x >= 0) {
         ret = position.y >= x ? 1 : 4;
@@ -127,12 +128,9 @@ void _debugPrint(Octree* root, int leadingSpaces) {
     }
 }
 
-void freeTree(Octree *root)
-{
-    if(!root->singleBody)
-    {
-        for(size_t i = 0; i < 8; i++)
-        {
+void freeTree(Octree *root) {
+    if(!root->singleBody) {
+        for(size_t i = 0; i < 8; i++) {
             freeTree(root->bodies[i]);
         }
     }
