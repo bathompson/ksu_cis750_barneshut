@@ -1,9 +1,34 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "vector_utils.h"
 #include "fileIO_util.h"
+#include "../common/octree.h"
 
 #define G 6.67430e-11
+
+Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
+{
+    double scalarForce = 0;
+    Vec3f vectorDist = ptToVector(body->pos, root->centerOfMass.pos);
+    float distSq = vectorDot(vectorDist, vectorDist);
+    float invDist = 1/sqrt(distSq);
+    if(2*root->rad*invDist < theta || root->singleBody)
+    {
+        //Find the force between two bodies
+        scalarForce = G * body->mass * root->centerOfMass.mass / distSq;
+        return vectorScalarMult(scalarForce, vectorNormalize(vectorDist));
+    }
+    else
+    {
+        Vec3f netForce = newVec3f(0,0,0);
+        for(size_t i = 0; i<8; i++)
+        {
+            netForce = vectorAdd(computeBarnesHutForce(root->bodies[i], body, theta), netForce);
+        }
+        return netForce;
+    }
+}
 
 int main(int argc, char **argv) {
     //Declarations
@@ -13,9 +38,11 @@ int main(int argc, char **argv) {
     FILE *out;
     Body **frames;
     Vec3f **pos;
+    Octree *root;
     char *filePath;
     float *masses;
     float deltaT;
+    float theta = 0.5;
 
     //Handle input
     if(argc < 5) {
@@ -47,19 +74,13 @@ int main(int argc, char **argv) {
     fclose(data);
 
     //Do the thing
-    for(size_t i = 0; i < timeSteps - 1; i++) {
+    for(size_t i = 0; i < timeSteps - 1; i++) 
+    {
         float t = i * deltaT;
-        for(size_t j = 0; j < bodyCount; j++) {
-            Vec3f netForce = newVec3f(0,0,0);
-            for(size_t k = 0; k<bodyCount; k++) {
-                    if (j != k) {
-                    Vec3f dist = ptToVector(frames[i][j].pos, frames[i][k].pos);
-                    float forceMag = G * (frames[i][j].mass * frames[i][k].mass) / vectorDot(dist, dist);
-                    Vec3f dir = vectorNormalize(dist);
-                    Vec3f force = vectorScalarMult(forceMag, dir);
-                    netForce = vectorAdd(netForce, dist);
-                }
-            }
+        Vec3f netForce;
+        for(size_t j = 0; j < bodyCount; j++) 
+        {
+            netForce = computeBarnesHutForce(root, &frames[i][j], theta);
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;
             frames[i+1][j].pos = finalPos(netForce, frames[i][j].vel, frames[i][j].pos, t);
