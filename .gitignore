@@ -85,9 +85,6 @@ cmake-build-*/
 #N-Body simulation output files
 *.nbody
 
-#CSV
-*.csv
-
 # General compilation output files on Beocat
 _cmrc/
 cmake/
