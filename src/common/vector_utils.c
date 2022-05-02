@@ -46,16 +46,15 @@ float distanceBetweenPoints(Vec3f u, Vec3f v) {
 
 }
 
-Body combineMass(Body rt, Body cd) {
+Body combineMass(Vec3f rootVector, float rootMass, Vec3f newVector, float newMass) {
     //Total mass is sum
     //CM = (x1m1 + x2m2)/(m1 + m2)
-    Body newMass;
-    newMass.mass = rt.mass + cd.mass;
-    newMass.pos.x = ((rt.mass * rt.pos.x) + (cd.mass * cd.pos.x)) / (rt.mass + cd.mass);
-    newMass.pos.y = ((rt.mass * rt.pos.y) + (cd.mass * cd.pos.y)) / (rt.mass + cd.mass);
-    newMass.pos.z = ((rt.mass * rt.pos.z) + (cd.mass * cd.pos.z)) / (rt.mass + cd.mass);
-
-    return newMass;
+    Body combinedMass;
+    combinedMass.mass = rootMass + newMass;
+    combinedMass.pos.x = ((rootMass * rootVector.x) + (newMass * newVector.x)) / (rootMass + newMass);
+    combinedMass.pos.y = ((rootMass * rootVector.y) + (newMass * newVector.y)) / (rootMass + newMass);
+    combinedMass.pos.z = ((rootMass * rootVector.z) + (newMass * newVector.z)) / (rootMass + newMass);
+    return combinedMass;
 }
 
 Body newEmptyBody() {
