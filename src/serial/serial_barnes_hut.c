@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "vector_utils.h"
-#include "fileIO_util.h"
+#include "../common/vector_utils.h"
+#include "../common/fileIO_util.h"
 #include "../common/octree.h"
 
 #define G 6.67430e-11
@@ -10,13 +10,13 @@
 Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
 {
     double scalarForce = 0;
-    Vec3f vectorDist = ptToVector(body->pos, root->centerOfMass.pos);
+    Vec3f vectorDist = ptToVector(body->pos, root->massPosition);
     float distSq = vectorDot(vectorDist, vectorDist);
     float invDist = 1/sqrt(distSq);
-    if(2*root->rad*invDist < theta || root->singleBody)
+    if(2*root->dist*invDist < theta || root->singleBody)
     {
         //Find the force between two bodies
-        scalarForce = G * body->mass * root->centerOfMass.mass / distSq;
+        scalarForce = G * body->mass * root->mass / distSq;
         return vectorScalarMult(scalarForce, vectorNormalize(vectorDist));
     }
     else
@@ -28,6 +28,16 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
         }
         return netForce;
     }
+}
+
+Octree *constructBarnesHutTree(Body *frame, size_t count)
+{
+    Octree *tree;
+    for(size_t i = 0; i<count; i++)
+    {
+        insertElement(tree, frame[i].pos, frame[i].mass);
+    }
+    return tree;
 }
 
 int main(int argc, char **argv) {
@@ -78,6 +88,7 @@ int main(int argc, char **argv) {
     {
         float t = i * deltaT;
         Vec3f netForce;
+        root = constructBarnesHutTree(frames[i], bodyCount);
         for(size_t j = 0; j < bodyCount; j++) 
         {
             netForce = computeBarnesHutForce(root, &frames[i][j], theta);
@@ -86,6 +97,7 @@ int main(int argc, char **argv) {
             frames[i+1][j].pos = finalPos(netForce, frames[i][j].vel, frames[i][j].pos, t);
             frames[i+1][j].vel = finalVel(netForce, frames[i][j].vel, t);
         }
+        freeTree(root);
     }
 
     //Put data into output format

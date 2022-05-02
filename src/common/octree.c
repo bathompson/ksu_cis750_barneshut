@@ -126,3 +126,15 @@ void _debugPrint(Octree* root, int leadingSpaces) {
         printf("Tree or child is NULL!\n\n");
     }
 }
+
+void freeTree(Octree *root)
+{
+    if(!root->singleBody)
+    {
+        for(size_t i = 0; i < 8; i++)
+        {
+            freeTree(root->bodies[i]);
+        }
+    }
+    free(root);
+}
