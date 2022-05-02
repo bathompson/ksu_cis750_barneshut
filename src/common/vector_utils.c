@@ -1,4 +1,5 @@
 #include <math.h>
+#include <cuda.h>
 #include "vector_utils.h"
 
 Vec3f newVec3f(float x, float y, float z) {
