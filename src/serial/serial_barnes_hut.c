@@ -32,10 +32,10 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
 
 Octree *constructBarnesHutTree(Body *frame, size_t count)
 {
-    Octree *tree;
+    Octree *tree = NULL;
     for(size_t i = 0; i<count; i++)
     {
-        insertElement(tree, frame[i].pos, frame[i].mass);
+        tree = insertElement(tree, frame[i].pos, frame[i].mass);
     }
     return tree;
 }
