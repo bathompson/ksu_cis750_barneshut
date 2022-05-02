@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         ui.sceneFPS = 1.0f / deltaTime;
 
         if (ui.hasNewFile()) {
-            results = std::make_shared<ResultFile>(ui.popFile());
+            results = std::make_shared<ResultFile>(ui.popFile(), 1 / 100000000000.0);
             ui.setMaxFrame(results->count_frames());
         }
 

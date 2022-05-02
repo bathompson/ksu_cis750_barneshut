@@ -1,7 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+extern "C"
+{
 #include "vector_utils.h"
 #include "fileIO_util.h"
+}
+#include <chrono>
 
 #define G 6.67430e-11
 
@@ -46,6 +50,9 @@ int main(int argc, char **argv) {
     readInput(data, frames[0], bodyCount);
     fclose(data);
 
+    // Begin timing
+    auto starttime = std::chrono::high_resolution_clock::now();
+
     //Do the thing
     for(size_t i = 0; i < timeSteps - 1; i++) {
         float t = i * deltaT;
@@ -57,7 +64,7 @@ int main(int argc, char **argv) {
                     float forceMag = G * (frames[i][j].mass * frames[i][k].mass) / vectorDot(dist, dist);
                     Vec3f dir = vectorNormalize(dist);
                     Vec3f force = vectorScalarMult(forceMag, dir);
-                    netForce = vectorAdd(netForce, dist);
+                    netForce = vectorAdd(netForce, force);
                 }
             }
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
@@ -66,6 +73,11 @@ int main(int argc, char **argv) {
             frames[i+1][j].vel = finalVel(netForce, frames[i][j].vel, t);
         }
     }
+
+    // End timing
+    auto endtime = std::chrono::high_resolution_clock::now();
+    double runtime = std::chrono::duration_cast<std::chrono::milliseconds>(endtime - starttime).count() / 1000.0;
+    printf("Simulated %d frames in %.4f seconds\n", timeSteps, runtime);
 
     //Put data into output format
     for(size_t i = 0; i < bodyCount; i++) {

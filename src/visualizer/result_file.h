@@ -7,7 +7,7 @@
 class ResultFile {
 
 public:
-    explicit ResultFile(const std::string& path);
+    explicit ResultFile(const std::string& path, float scale = 1.0f);
     ~ResultFile();
 
     size_t num_bodies() const { return d_num_bodies; };
@@ -20,6 +20,8 @@ public:
     void seek(size_t frame);
 
 private:
+    float d_scale;
+
     std::fstream d_stream;
 
     size_t d_num_bodies;
