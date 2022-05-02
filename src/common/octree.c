@@ -67,7 +67,6 @@ Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass, int ct) {
         float x = rootTree->centerPosition.x + (distHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1));
         float y = rootTree->centerPosition.y + (distHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1));
         float z = rootTree->centerPosition.z + (distHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1));
-        //printf("X, Y, Z %f %f %f\n", x, y, z);
         rootTree->bodies[rootOctant] = subdivideOctree(vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf), newBody, mass, ct + 1);
     } else {
         //Create sub-trees with the body that was center of mass, and the new body.
@@ -129,6 +128,9 @@ void _debugPrint(Octree* root, int leadingSpaces) {
 }
 
 void freeTree(Octree *root) {
+    if(root == NULL) {
+        return;
+    }
     if(!root->singleBody) {
         for(size_t i = 0; i < 8; i++) {
             freeTree(root->bodies[i]);

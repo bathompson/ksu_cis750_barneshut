@@ -7,7 +7,7 @@
 
 #define G 6.67430e-11
 
-Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
+Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta, int depth)
 {
     if(root == NULL)
     {
@@ -28,7 +28,7 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
         Vec3f netForce = newVec3f(0,0,0);
         for(size_t i = 0; i<8; i++)
         {
-            netForce = vectorAdd(computeBarnesHutForce(root->bodies[i], body, theta), netForce);
+            netForce = vectorAdd(computeBarnesHutForce(root->bodies[i], body, theta, depth + 1), netForce);
         }
         return netForce;
     }
@@ -39,6 +39,7 @@ Octree *constructBarnesHutTree(Body *frame, size_t count)
     Octree *tree = NULL;
     for(size_t i = 0; i<count; i++)
     {
+        printf("We are preing inserting it at %f %f %f\n", frame[i].pos.x, frame[i].pos.y, frame[i].pos.z);
         tree = insertElement(tree, frame[i].pos, frame[i].mass);
     }
     return tree;
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
         root = constructBarnesHutTree(frames[i], bodyCount);
         for(size_t j = 0; j < bodyCount; j++) 
         {
-            netForce = computeBarnesHutForce(root, &frames[i][j], theta);
+            netForce = computeBarnesHutForce(root, &frames[i][j], theta, 0);
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;
             frames[i+1][j].pos = finalPos(netForce, frames[i][j].vel, frames[i][j].pos, t);
