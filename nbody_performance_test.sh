@@ -1,7 +1,7 @@
 #! /bin/bash
 
 #SBATCH --job-name=nbody_performance_test
-#SBATCH --time=00:10:00
+#SBATCH --time=02:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
@@ -12,17 +12,17 @@
 
 ./cmake/bin/cmake .
 make serial_direct_sum
-#make serial_barnes_hut
+make serial_barnes_hut
 #make parallel_barnes_hut
 make nyland_cuda_implementation
 make burtscher_cuda_implementation
 
-TRIALS=$(seq 1 2)
+TRIALS=$(seq 1 1)
 
 for TRIAL in ${TRIALS}
 do
     echo "Burtscher et. al. Trial $TRIAL"
-    ./burtscher_cuda_implementation 65536 300 0 input.csv
+    ./burtscher_cuda_implementation 16384 300 0 input.csv
 done
 
 for TRIAL in ${TRIALS}
@@ -34,19 +34,19 @@ done
 for TRIAL in ${TRIALS}
 do
     echo "Serial Direct Sum Trial $TRIAL"
-    ./serial_direct_sum input.csv 65536 300 1.0
+    ./serial_direct_sum input.csv 16384 300 1.0 1000000 outputdirect.nbody
+done
+
+# Uncomment when implemented
+for TRIAL in ${TRIALS}
+do
+    echo "Serial Barnes-Hut Trial $TRIAL"
+    ./serial_barnes_hut input.csv 16384 300 1.0 0.5 1000000 outputbarnes.nbody
 done
 
 # Uncomment when implemented
 #for TRIAL in ${TRIALS}
 #do
-#    echo "Serial Barnes-Hut Trial $TRIAL"
-#    ./serial_barnes_hut input.csv 65536 300 1.0
-#done
-
-# Uncomment when implemented
-#for TRIAL in ${TRIALS}
-#do
 #    echo "Parallel Barnes-Hut Trial $TRIAL"
-#    ./parallel_barnes_hut input.csv 65536 300 1.0
+#    ./parallel_barnes_hut input.csv 16384 300 1.0
 #done
