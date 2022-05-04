@@ -5,7 +5,7 @@
 #include "../common/fileIO_util.h"
 #include "../common/octree.h"
 
-#define G 6.67430e-11
+#define G 1
 
 Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
 {
@@ -27,10 +27,6 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
     //Barnes hut / single node check.
     else if(2*root->dist*invDist < theta || root->singleBody)
     {
-        if(2*root->dist*invDist < theta && !(root->singleBody)) {
-            //printf("Barnes hut came into play with a val of %f\n", 2*root->dist*invDist);
-            //printf("rootDist %f\n", root->dist);
-        }
         //Find the force between two bodies
         scalarForce = G * body->mass * root->mass / distSq;
         return vectorScalarMult(scalarForce, vectorNormalize(vectorDist));
