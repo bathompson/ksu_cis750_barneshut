@@ -17,12 +17,13 @@ int main(int argc, char **argv) {
     FILE *out;
     Body **frames;
     Vec3f **pos;
+    char *outputFileName;
     char *filePath;
     float *masses;
     float deltaT;
 
     //Handle input
-    if(argc < 5) {
+    if(argc < 7) {
         printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds>\n");
         exit(0);
     }
@@ -31,6 +32,7 @@ int main(int argc, char **argv) {
     bodyCount = strtoul(argv[2], NULL, 10);
     timeSteps = strtoul(argv[3], NULL, 10);
     deltaT = atof(argv[4]);
+    outputFileName = argv[5];
 
     //Allocate Memory
     frames = (Body **) malloc(timeSteps * sizeof(Body *));
@@ -91,7 +93,7 @@ int main(int argc, char **argv) {
     }
 
     //Write to output
-    out = fopen("out.nbody", "wb");
+    out = fopen(outputFileName, "wb");
     writeOutput(out, bodyCount, timeSteps, masses, pos);
     fclose(out);
 

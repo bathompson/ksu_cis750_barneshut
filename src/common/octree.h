@@ -11,6 +11,8 @@ typedef struct Octree {
     float dist;
 } Octree;
 
+void setDiameter(float size);
+
 /**
  * @brief Inserts an element into the octree that does not already exist.
  * 

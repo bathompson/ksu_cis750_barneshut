@@ -9,24 +9,29 @@
 
 Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
 {
+    //Check if the root is null, if so return 0 valued vector.
     if(root == NULL)
     {
         return newVec3f(0,0,0);
     }
+    //Calculate vector values.
     double scalarForce = 0;
     Vec3f vectorDist = ptToVector(body->pos, root->massPosition);
     float distSq = vectorDot(vectorDist, vectorDist);
-    float invDist = 1/sqrtf(distSq);
+    float invDist = 1.0f/sqrtf(distSq);
+    //Check if the body and root are equal, if so there is no forces
     if(vectorEq(body->pos, root->massPosition))
     {
         return newVec3f(0, 0, 0);
     }
+    //Barnes hut / single node check.
     else if(2*root->dist*invDist < theta || root->singleBody)
     {
         //Find the force between two bodies
         scalarForce = G * body->mass * root->mass / distSq;
         return vectorScalarMult(scalarForce, vectorNormalize(vectorDist));
     }
+    //Recursive call.
     else
     {
         Vec3f netForce = newVec3f(0,0,0);
@@ -38,9 +43,26 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
     }
 }
 
+
+float findMaxSize(Body* bodies, int bodyCount) {
+    float max = 0.0f;
+    for(size_t i = 0; i < bodyCount; i++) {
+        if(fabs(bodies->pos.x > max)) {
+            max = fabs(bodies->pos.x);
+        }
+        if(fabs(bodies->pos.y > max)) {
+            max = fabs(bodies->pos.y);
+        }
+        if(fabs(bodies->pos.z > max)) {
+            max = fabs(bodies->pos.z);
+        }
+    }
+}
+
 Octree *constructBarnesHutTree(Body *frame, size_t count)
 {
     Octree *tree = NULL;
+    setDiameter(findMaxSize(frame, count));
     for(size_t i = 0; i<count; i++)
     {
         tree = insertElement(tree, frame[i].pos, frame[i].mass);
@@ -57,14 +79,15 @@ int main(int argc, char **argv) {
     Body **frames;
     Vec3f **pos;
     Octree *root;
+    char *outputFileName;
     char *filePath;
     float *masses;
     float deltaT;
-    float theta = 0.9f;
+    float theta = 0.0f;
 
     //Handle input
-    if(argc < 5) {
-        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds>\n");
+    if(argc < 7) {
+        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds> <theta> <outputFileName>\n");
         exit(0);
     }
 
@@ -72,6 +95,8 @@ int main(int argc, char **argv) {
     bodyCount = strtoul(argv[2], NULL, 10);
     timeSteps = strtoul(argv[3], NULL, 10);
     deltaT = atof(argv[4]);
+    theta = atof(argv[5]);
+    outputFileName = argv[6];
 
     //Allocate Memory
     frames = (Body **) malloc(timeSteps * sizeof(Body *));
@@ -120,7 +145,7 @@ int main(int argc, char **argv) {
     }
 
     //Write to output
-    out = fopen("out.nbody", "wb");
+    out = fopen(outputFileName, "wb");
     writeOutput(out, bodyCount, timeSteps, masses, pos);
     fclose(out);
 

@@ -3,7 +3,12 @@
 #include "vector_utils.h"
 #include "octree.h"
 
-#define MAX_TREE_DIAMETER __FLT_MAX__
+float MAX_TREE_DIAMETER = 0;
+
+void setDiameter(float maxSize) {
+    MAX_TREE_DIAMETER = maxSize;
+}
+
 Octree* insertElement(Octree* root, Vec3f newVector, float mass) {
     //If tree does not exist.
     if(root == NULL) {
@@ -67,27 +72,24 @@ Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass) {
         //Get the octant of the root and new body.
         rootOctant = getOctantVector(rootTree->massPosition, rootTree->centerPosition);
         newOctant = getOctantVector(newBody, rootTree->centerPosition);
-        //printf("Octants are %d %d\n", rootOctant, newOctant);
-        if(rootOctant == newOctant) {
-            float distHalf = rootTree->dist / 2;
-            float x = rootTree->centerPosition.x + (distHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1));
-            float y = rootTree->centerPosition.y + (distHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1));
-            float z = rootTree->centerPosition.z + (distHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1));
-            //rootTree->bodies[rootOctant] = subdivideOctree(vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf), newBody, mass, ct + 1);
-            Octree* retted = vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf);
-            rootTree->bodies[rootOctant] = retted;
-            rootTree = retted;
-            flag = 1;
-        } else {
-            //Create sub-trees with the body that was center of mass, and the new body.
+        if(rootOctant != newOctant) {
             rootTree->bodies[rootOctant] = vectorToOctree(rootTree->massPosition, rootTree->mass, rootTree->centerPosition.x, 
                 rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->dist);
             rootTree->bodies[newOctant] = vectorToOctree(newBody, mass, rootTree->centerPosition.x, 
                 rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->dist);
-            Body retBody = combineMass(rootTree->massPosition, rootTree->mass, newBody, mass);
-            rootTree->massPosition = retBody.pos;
-            rootTree->mass = retBody.mass;
+            flag = 0;
+        } else {
+            float distHalf = rootTree->dist / 2;
+            float x = rootTree->centerPosition.x + (distHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1));
+            float y = rootTree->centerPosition.y + (distHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1));
+            float z = rootTree->centerPosition.z + (distHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1));
+            Octree* retted = vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf);
+            rootTree->bodies[rootOctant] = retted;
+            rootTree = rootTree->bodies[rootOctant];
         }
+        Body retBody = combineMass(rootTree->massPosition, rootTree->mass, newBody, mass);
+        rootTree->massPosition = retBody.pos;
+        rootTree->mass = retBody.mass;
     } while(flag);
 
     return useThisToReturn;
