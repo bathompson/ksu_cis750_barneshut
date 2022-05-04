@@ -4,11 +4,11 @@
 typedef struct Octree {
     //See https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Octant_numbers.svg/1200px-Octant_numbers.svg.png for octant labeling.
     struct Octree* bodies[8];
-    Vec3f massPosition;
     Vec3f centerPosition;
+    Vec3f massPosition;
+    int singleBody;
     float mass;
     float dist;
-    int singleBody;
 } Octree;
 
 /**
@@ -45,7 +45,7 @@ Octree* vectorToOctree(Vec3f vector, float mass, float x, float y, float z, floa
  * 
  * @return Octree* The pointer to the now divided tree.
  */
-Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass);
+Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass, int ct);
 
 /**
  * @brief Get the Octant of a vector.
@@ -67,7 +67,7 @@ int getOctantVector(Vec3f position, Vec3f centerPosition);
  * 
  * @return int The relative octant.
  */
-int getOctantPosition(Vec3f position, int x, int y, int z);
+int getOctantPosition(Vec3f position, float x, float y, float z);
 
 /**
  * @brief Debug method to make sure things are inserting properly.
