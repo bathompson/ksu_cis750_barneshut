@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
             }
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;
-            frames[i+1][j].pos = finalPos(netForce, frames[i][j].vel, frames[i][j].pos, t);
-            frames[i+1][j].vel = finalVel(netForce, frames[i][j].vel, t);
+            frames[i+1][j].pos = finalPos(accel, frames[i][j].vel, frames[i][j].pos, t);
+            frames[i+1][j].vel = finalVel(accel, frames[i][j].vel, t);
         }
     }
 

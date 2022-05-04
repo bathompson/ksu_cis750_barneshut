@@ -16,8 +16,12 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
     double scalarForce = 0;
     Vec3f vectorDist = ptToVector(body->pos, root->massPosition);
     float distSq = vectorDot(vectorDist, vectorDist);
-    float invDist = 1/sqrt(distSq);
-    if(2*root->dist*invDist > theta || root->singleBody)
+    float invDist = 1/sqrtf(distSq);
+    if(vectorEq(body->pos, root->massPosition))
+    {
+        return newVec3f(0, 0, 0);
+    }
+    else if(2*root->dist*invDist < theta || root->singleBody)
     {
         //Find the force between two bodies
         scalarForce = G * body->mass * root->mass / distSq;
@@ -56,7 +60,7 @@ int main(int argc, char **argv) {
     char *filePath;
     float *masses;
     float deltaT;
-    float theta = 0.5;
+    float theta = 0.9f;
 
     //Handle input
     if(argc < 5) {
@@ -98,8 +102,8 @@ int main(int argc, char **argv) {
             netForce = computeBarnesHutForce(root, &frames[i][j], theta);
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;
-            frames[i+1][j].pos = finalPos(netForce, frames[i][j].vel, frames[i][j].pos, t);
-            frames[i+1][j].vel = finalVel(netForce, frames[i][j].vel, t);
+            frames[i+1][j].pos = finalPos(accel, frames[i][j].vel, frames[i][j].pos, t);
+            frames[i+1][j].vel = finalVel(accel, frames[i][j].vel, t);
         }
         freeTree(root);
     }

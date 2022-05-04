@@ -20,7 +20,7 @@ Vec3f vectorScalarMult(float t, Vec3f u) {
 }
 
 Vec3f vectorNormalize(Vec3f u) {
-    float normalizationFactor = 1/sqrt(vectorDot(u, u));
+    float normalizationFactor = 1/sqrtf(vectorDot(u, u));
     return vectorScalarMult(normalizationFactor, u);
 }
 
@@ -43,8 +43,12 @@ float vectorDot(Vec3f u, Vec3f v) {
 }
 
 float distanceBetweenPoints(Vec3f u, Vec3f v) {
-    return sqrt(u.x * v.x + u.y * v.y + u.z * v.z);
+    return sqrtf(u.x * v.x + u.y * v.y + u.z * v.z);
 
+}
+
+int vectorEq(Vec3f u, Vec3f v) {
+    return u.x == v.x && u.y == v.y && u.z == v.z;
 }
 
 Body combineMass(Vec3f rootVector, float rootMass, Vec3f newVector, float newMass) {

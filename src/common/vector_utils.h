@@ -62,6 +62,8 @@ float distanceBetweenPoints(Vec3f u, Vec3f v);
  */
 Vec3f vectorNormalize(Vec3f u);
 
+int vectorEq(Vec3f u, Vec3f v);
+
 /**
  * @brief Constructs a vector starting at p1 pointing towards p2
  * 
