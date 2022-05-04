@@ -3,8 +3,8 @@
 #define IMGUI_IMPLEMENTATION
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <backends/imgui_impl_glfw.h>
 #include <imfilebrowser.h>
 
 ImguiUI::ImguiUI(GLFWwindow* window) {

@@ -2,7 +2,7 @@
 
 #include <limits>
 
-ResultFile::ResultFile(const std::string &path, float scale/* = 1.0f*/) : d_current_frame(0), d_scale(scale) {
+ResultFile::ResultFile(const std::string &path, bool rescale/* = false*/) : d_current_frame(0) {
     d_stream.open(path, std::ios::in | std::ios::binary);
 
     // Get size of file
@@ -20,8 +20,17 @@ ResultFile::ResultFile(const std::string &path, float scale/* = 1.0f*/) : d_curr
     d_positions.resize(3 * d_num_bodies);
     d_stream.read((char*) d_masses.data(), d_num_bodies * sizeof(float));
     d_stream.read((char*) d_positions.data(), 3 * d_num_bodies * sizeof(float));
-    for (int i = 0; i < d_positions.size(); i++) {
-        d_positions[i] = d_positions[i] * d_scale;
+
+    // Normalize positions
+    d_scale = 1.0;
+    if (rescale) {
+        for (int i = 0; i < d_positions.size(); i++) {
+            d_scale = std::max(d_scale, std::abs(d_positions[i]));
+        }
+        d_scale = 1 / d_scale;
+        for (int i = 0; i < d_positions.size(); i++) {
+            d_positions[i] = d_positions[i] * d_scale;
+        }
     }
 
     // Normalize masses

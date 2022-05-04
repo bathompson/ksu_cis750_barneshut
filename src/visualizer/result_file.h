@@ -7,7 +7,7 @@
 class ResultFile {
 
 public:
-    explicit ResultFile(const std::string& path, float scale = 1.0f);
+    explicit ResultFile(const std::string& path, bool rescale = false);
     ~ResultFile();
 
     size_t num_bodies() const { return d_num_bodies; };
