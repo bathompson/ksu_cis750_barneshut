@@ -5,7 +5,7 @@
 #include "../common/fileIO_util.h"
 #include "../common/octree.h"
 
-#define G 1
+int G = 0;
 
 Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
 {
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 
     //Handle input
     if(argc < 7) {
-        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds> <theta> <outputFileName>\n");
+        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds> <theta> <G> <outputFileName>\n");
         exit(0);
     }
 
@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
     timeSteps = strtoul(argv[3], NULL, 10);
     deltaT = atof(argv[4]);
     theta = atof(argv[5]);
-    outputFileName = argv[6];
+    G = atoi(argv[6]);
+    outputFileName = argv[7];
 
     //Allocate Memory
     frames = (Body **) malloc(timeSteps * sizeof(Body *));
