@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     float theta = 0.0f;
 
     //Handle input
-    if(argc < 7) {
+    if(argc < 8) {
         printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds> <theta> <G> <outputFileName>\n");
         exit(0);
     }

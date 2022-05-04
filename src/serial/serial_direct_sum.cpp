@@ -7,7 +7,7 @@ extern "C"
 }
 #include <chrono>
 
-#define G 6.67430e-11
+int G = 0;
 
 int main(int argc, char **argv) {
     //Declarations
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
     //Handle input
     if(argc < 7) {
-        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds>\n");
+        printf("Usage: <path to input> <number of inputs> <number of timesteps> <length of time steps in seconds> <G>\n");
         exit(0);
     }
 
@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
     timeSteps = strtoul(argv[3], NULL, 10);
     deltaT = atof(argv[4]);
     outputFileName = argv[5];
+    G = atoi(argv[6]);
 
     //Allocate Memory
     frames = (Body **) malloc(timeSteps * sizeof(Body *));
