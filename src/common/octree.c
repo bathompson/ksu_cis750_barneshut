@@ -25,7 +25,7 @@ Octree* insertElement(Octree* root, Vec3f newVector, float mass) {
         root->singleBody = 0;
     } else if(root->bodies[octant]->singleBody == 1) {
         //When there is already a single body there, subdivide the tree.
-        root->bodies[octant] = subdivideOctree(root->bodies[octant], newVector, mass, 0);
+        root->bodies[octant] = subdivideOctree(root->bodies[octant], newVector, mass);
     } else {
         //If octant is not a single body, and is not null, recursive call.
         root->bodies[octant] = insertElement(root->bodies[octant], newVector, mass);
@@ -55,30 +55,42 @@ Octree* vectorToOctree(Vec3f vector, float mass, float x, float y, float z, floa
     return newTree;
 }
 
-Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass, int ct) {
-    //Mark it as no longer a single body.
-    rootTree->singleBody = 0;
-    //Get the octant of the root and new body.
-    int rootOctant = getOctantVector(rootTree->massPosition, rootTree->centerPosition);
-    int newOctant = getOctantVector(newBody, rootTree->centerPosition);
-    //printf("Octants are %d %d\n", rootOctant, newOctant);
-    if(rootOctant == newOctant) {
-        float distHalf = rootTree->dist / 2;
-        float x = rootTree->centerPosition.x + (distHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1));
-        float y = rootTree->centerPosition.y + (distHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1));
-        float z = rootTree->centerPosition.z + (distHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1));
-        rootTree->bodies[rootOctant] = subdivideOctree(vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf), newBody, mass, ct + 1);
-    } else {
-        //Create sub-trees with the body that was center of mass, and the new body.
-        rootTree->bodies[rootOctant] = vectorToOctree(rootTree->massPosition, rootTree->mass, rootTree->centerPosition.x, 
-            rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->dist);
-        rootTree->bodies[newOctant] = vectorToOctree(newBody, mass, rootTree->centerPosition.x, 
-            rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->dist);
-    }
-    Body retBody = combineMass(rootTree->massPosition, rootTree->mass, newBody, mass);
-    rootTree->massPosition = retBody.pos;
-    rootTree->mass = retBody.mass;
-    return rootTree;
+Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass) {
+    int flag = 1;
+    int rootOctant = 0;
+    int newOctant = 0;
+    Octree* useThisToReturn = rootTree;
+    do {
+        flag = 0;
+        //Mark it as no longer a single body.
+        rootTree->singleBody = 0;
+        //Get the octant of the root and new body.
+        rootOctant = getOctantVector(rootTree->massPosition, rootTree->centerPosition);
+        newOctant = getOctantVector(newBody, rootTree->centerPosition);
+        //printf("Octants are %d %d\n", rootOctant, newOctant);
+        if(rootOctant == newOctant) {
+            float distHalf = rootTree->dist / 2;
+            float x = rootTree->centerPosition.x + (distHalf * (newBody.x > rootTree->centerPosition.x ? 1 : -1));
+            float y = rootTree->centerPosition.y + (distHalf * (newBody.y > rootTree->centerPosition.y ? 1 : -1));
+            float z = rootTree->centerPosition.z + (distHalf * (newBody.z > rootTree->centerPosition.z ? 1 : -1));
+            //rootTree->bodies[rootOctant] = subdivideOctree(vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf), newBody, mass, ct + 1);
+            Octree* retted = vectorToOctree(rootTree->massPosition, rootTree->mass, x, y, z, distHalf);
+            rootTree->bodies[rootOctant] = retted;
+            rootTree = retted;
+            flag = 1;
+        } else {
+            //Create sub-trees with the body that was center of mass, and the new body.
+            rootTree->bodies[rootOctant] = vectorToOctree(rootTree->massPosition, rootTree->mass, rootTree->centerPosition.x, 
+                rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->dist);
+            rootTree->bodies[newOctant] = vectorToOctree(newBody, mass, rootTree->centerPosition.x, 
+                rootTree->centerPosition.y, rootTree->centerPosition.z, rootTree->dist);
+            Body retBody = combineMass(rootTree->massPosition, rootTree->mass, newBody, mass);
+            rootTree->massPosition = retBody.pos;
+            rootTree->mass = retBody.mass;
+        }
+    } while(flag);
+
+    return useThisToReturn;
 }
 
 int getOctantVector(Vec3f position, Vec3f centerPosition) {

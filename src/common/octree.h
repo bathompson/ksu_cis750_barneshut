@@ -45,7 +45,7 @@ Octree* vectorToOctree(Vec3f vector, float mass, float x, float y, float z, floa
  * 
  * @return Octree* The pointer to the now divided tree.
  */
-Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass, int ct);
+Octree* subdivideOctree(Octree* rootTree, Vec3f newBody, float mass);
 
 /**
  * @brief Get the Octant of a vector.
