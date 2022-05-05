@@ -11,8 +11,6 @@ typedef struct Octree {
     float dist;
 } Octree;
 
-void setDiameter(float size);
-
 /**
  * @brief Inserts an element into the octree that does not already exist.
  * 
@@ -72,17 +70,23 @@ int getOctantVector(Vec3f position, Vec3f centerPosition);
 int getOctantPosition(Vec3f position, float x, float y, float z);
 
 /**
- * @brief Debug method to make sure things are inserting properly.
- * 
- * @param root The tree.
- * @param leadingSpaces the amount of spaces to lead the prints with (used to see children easier).
- */
-void _debugPrint(Octree* root, int leadingSpaces);
-
-/**
  * @brief Frees a tree
  * 
  * @param root the root of the tree to be freed
  */
 void freeTree(Octree *root);
 
+/**
+ * @brief Sets the maximum diameter of the octree.
+ * 
+ * @param size The diameter of the octree.
+ */
+void setDiameter(float size);
+
+/**
+ * @brief Debug method to make sure things are inserting properly.
+ * 
+ * @param root The tree.
+ * @param leadingSpaces the amount of spaces to lead the prints with (used to see children easier).
+ */
+void _debugPrint(Octree* root, int leadingSpaces);

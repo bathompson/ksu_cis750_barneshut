@@ -7,11 +7,9 @@
 
 int G = 0;
 
-Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
-{
+Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta) {
     //Check if the root is null, if so return 0 valued vector.
-    if(root == NULL)
-    {
+    if(root == NULL) {
         return newVec3f(0,0,0);
     }
     //Calculate vector values.
@@ -20,29 +18,22 @@ Vec3f computeBarnesHutForce(Octree *root, Body *body, float theta)
     float distSq = vectorDot(vectorDist, vectorDist);
     float invDist = 1.0f/sqrtf(distSq);
     //Check if the body and root are equal, if so there is no forces
-    if(vectorEq(body->pos, root->massPosition))
-    {
+    if(vectorEq(body->pos, root->massPosition)) {
         return newVec3f(0, 0, 0);
-    }
-    //Barnes hut / single node check.
-    else if(2*root->dist*invDist < theta || root->singleBody)
-    {
+    //Check either barnes hut condition or single body.
+    } else if(2*root->dist*invDist < theta || root->singleBody) {
         //Find the force between two bodies
         scalarForce = G * body->mass * root->mass / distSq;
         return vectorScalarMult(scalarForce, vectorNormalize(vectorDist));
-    }
-    //Recursive call.
-    else
-    {
+    } else {
+        //Loop through all children
         Vec3f netForce = newVec3f(0,0,0);
-        for(size_t i = 0; i<8; i++)
-        {
+        for(size_t i = 0; i < 8; i++) {
             netForce = vectorAdd(computeBarnesHutForce(root->bodies[i], body, theta), netForce);
         }
         return netForce;
     }
 }
-
 
 float findMaxSize(Body* bodies, int bodyCount) {
     float max = 0.0f;
@@ -60,12 +51,10 @@ float findMaxSize(Body* bodies, int bodyCount) {
     return max;
 }
 
-Octree *constructBarnesHutTree(Body *frame, size_t count)
-{
+Octree *constructBarnesHutTree(Body *frame, size_t count) {
     Octree *tree = NULL;
     setDiameter(findMaxSize(frame, count));
-    for(size_t i = 0; i<count; i++)
-    {
+    for(size_t i = 0; i<count; i++) {
         tree = insertElement(tree, frame[i].pos, frame[i].mass);
     }
     return tree;
@@ -119,13 +108,11 @@ int main(int argc, char **argv) {
     fclose(data);
 
     //Do the thing
-    for(size_t i = 0; i < timeSteps - 1; i++) 
-    {
+    for(size_t i = 0; i < timeSteps - 1; i++) {
         float t = i * deltaT;
         Vec3f netForce;
         root = constructBarnesHutTree(frames[i], bodyCount);
-        for(size_t j = 0; j < bodyCount; j++) 
-        {
+        for(size_t j = 0; j < bodyCount; j++) {
             netForce = computeBarnesHutForce(root, &frames[i][j], theta);
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;

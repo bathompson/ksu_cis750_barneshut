@@ -5,10 +5,6 @@
 
 float MAX_TREE_DIAMETER = 0;
 
-void setDiameter(float maxSize) {
-    MAX_TREE_DIAMETER = maxSize;
-}
-
 Octree* insertElement(Octree* root, Vec3f newVector, float mass) {
     //If tree does not exist.
     if(root == NULL) {
@@ -110,6 +106,23 @@ int getOctantPosition(Vec3f position, float x, float y, float z) {
     return ret - 1;
 }
 
+void freeTree(Octree *root) {
+    if(root == NULL) {
+        return;
+    }
+    if(!root->singleBody) {
+        for(size_t i = 0; i < 8; i++) {
+            freeTree(root->bodies[i]);
+        }
+    }
+    free(root);
+}
+
+void setDiameter(float maxSize) {
+    MAX_TREE_DIAMETER = maxSize;
+}
+
+
 void _debugPrint(Octree* root, int leadingSpaces) {
     //This method looks gross, and it is, but it is only for debug display.
     if(root != NULL) {
@@ -139,16 +152,4 @@ void _debugPrint(Octree* root, int leadingSpaces) {
         }
         printf("Tree or child is NULL!\n\n");
     }
-}
-
-void freeTree(Octree *root) {
-    if(root == NULL) {
-        return;
-    }
-    if(!root->singleBody) {
-        for(size_t i = 0; i < 8; i++) {
-            freeTree(root->bodies[i]);
-        }
-    }
-    free(root);
 }
