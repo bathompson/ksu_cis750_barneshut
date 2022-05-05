@@ -1,4 +1,4 @@
-#include "result_file.h"
+#include "common/result_file.h"
 #include <memory>
 
 int main(int argc, char *argv[]) {

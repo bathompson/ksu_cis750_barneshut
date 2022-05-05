@@ -33,7 +33,7 @@ add_executable(visualizer
     shader_program.cpp shader_program.h
     vertex_buffer.h vertex.h
     camera.h camera_controller.cpp camera_controller.h
-    result_file.cpp result_file.h
+    ../common/result_file.cpp ../common/result_file.h
     imgui_ui.cpp imgui_ui.h
     ${IMGUI_SOURCES} ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
     ${imgui_SOURCE_DIR}/misc/cpp/imgui_stdlib.h ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.h ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
