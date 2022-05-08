@@ -183,6 +183,8 @@ int main(int argc, char **argv) {
     free(frames);
     free(pos);
     free(masses);
+    cudaFree(gpuFrame);
 
     freeTreeCPU(tree);
+    freeTreeCUDA(gpuTree);
 }
