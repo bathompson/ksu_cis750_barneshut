@@ -51,7 +51,7 @@ __device__ Vec3f finalPosGPU(Vec3f accel, Vec3f v0, Vec3f p0, double t)
 }
 
 __device__ float distanceBetweenPointsGPU(Vec3f u, Vec3f v) {
-    return sqrt(u.x * v.x + u.y * v.y + u.z * v.z);
+    return __fsqrt_rn (u.x * v.x + u.y * v.y + u.z * v.z);
 
 }
 
