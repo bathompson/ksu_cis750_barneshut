@@ -40,7 +40,7 @@ __device__ Vec3f ptToVectorGPU(Vec3f p1, Vec3f p2)
 
 __device__ Vec3f finalVelGPU(Vec3f accel, Vec3f v0, double t)
 {
-    return newVec3fGPU(accel.x * t + v0.x, accel.y * t + v0.y, accel.y * t + v0.y);
+    return newVec3fGPU(accel.x * t + v0.x, accel.y * t + v0.y, accel.z * t + v0.z);
 }
 
 __device__ Vec3f finalPosGPU(Vec3f accel, Vec3f v0, Vec3f p0, double t)

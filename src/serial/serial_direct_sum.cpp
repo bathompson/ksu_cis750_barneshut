@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     auto starttime = std::chrono::high_resolution_clock::now();
 
     //Do the thing
-    for(size_t i = 0; i < timeSteps - 1; i++) {+
+    for(size_t i = 0; i < timeSteps - 1; i++) {
         for(size_t j = 0; j < bodyCount; j++) {
             Vec3f netForce = newVec3f(0,0,0);
             for(size_t k = 0; k<bodyCount; k++) {
