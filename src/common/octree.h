@@ -27,7 +27,7 @@ Octree allocateOctreeCPU(int capacity);
  * @param tree The tree to reset.
  * @param capacity The capacity of the tree, in nodes.
  */
-void resetOctree(Octree tree, int capacity);
+void resetOctreeCPU(Octree tree, int capacity);
 
 /**
  * @brief Inserts an element into the octree that does not already exist.
@@ -93,7 +93,7 @@ int getOctantPosition(Vec3f position, float x, float y, float z);
  * 
  * @param root the root of the tree to be freed
  */
-void freeTree(Octree root);
+void freeTreeCPU(Octree root);
 
 /**
  * @brief Sets the maximum diameter of the octree.

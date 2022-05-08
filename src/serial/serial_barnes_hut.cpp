@@ -57,7 +57,7 @@ float findMaxSize(Body* bodies, int bodyCount) {
 }
 
 void constructBarnesHutTree(Octree tree, Body *frame, size_t count) {
-    resetOctree(tree, capcity);
+    resetOctreeCPU(tree, capcity);
     setDiameter(findMaxSize(frame, count));
     for(size_t i = 0; i<count; i++) {
         insertElement(tree, 0, frame[i].pos, frame[i].mass);
@@ -120,15 +120,14 @@ int main(int argc, char **argv) {
 
     //Do the thing
     for(size_t i = 0; i < timeSteps - 1; i++) {
-        float t = i * deltaT;
         Vec3f netForce;
         constructBarnesHutTree(tree, frames[i], bodyCount);
         for(size_t j = 0; j < bodyCount; j++) {
             netForce = computeBarnesHutForce(tree, 0, &frames[i][j], theta);
             Vec3f accel = vectorScalarMult(1/frames[i][j].mass, netForce);
             frames[i+1][j].mass = frames[i][j].mass;
-            frames[i+1][j].pos = finalPos(accel, frames[i][j].vel, frames[i][j].pos, t);
-            frames[i+1][j].vel = finalVel(accel, frames[i][j].vel, t);
+            frames[i+1][j].pos = finalPos(accel, frames[i][j].vel, frames[i][j].pos, deltaT);
+            frames[i+1][j].vel = finalVel(accel, frames[i][j].vel, deltaT);
         }
     }
 
@@ -163,5 +162,5 @@ int main(int argc, char **argv) {
     free(pos);
     free(masses);
 
-    freeTree(tree);
+    freeTreeCPU(tree);
 }

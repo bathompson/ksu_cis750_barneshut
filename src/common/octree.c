@@ -20,7 +20,7 @@ Octree allocateOctreeCPU(int capacity) {
     return tree;
 }
 
-void resetOctree(Octree tree, int capacity) {
+void resetOctreeCPU(Octree tree, int capacity) {
     memset(tree.children, -1, capacity * 8 * sizeof(int));
     memset(tree.centerPosition, 0, capacity * sizeof(Vec3f));
     memset(tree.massPosition, 0, capacity * sizeof(Vec3f));
@@ -128,7 +128,7 @@ int getOctantPosition(Vec3f position, float x, float y, float z) {
     return ret - 1;
 }
 
-void freeTree(Octree root) {
+void freeTreeCPU(Octree root) {
     free(root.children);
     free(root.centerPosition);
     free(root.massPosition);
