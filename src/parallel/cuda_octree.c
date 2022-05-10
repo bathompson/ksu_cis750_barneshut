@@ -35,13 +35,14 @@ void resetOctreeCUDA(Octree tree, int capacity) {
 }
 
 void copyOctreeToCUDA(Octree cpuTree, Octree cudaTree, int capacity) {
-    cudaMemcpyAsync(cudaTree.children, cpuTree.children, capacity * 8, cudaMemcpyHostToDevice, 0);
-    cudaMemcpyAsync(cudaTree.centerPosition, cpuTree.centerPosition, capacity, cudaMemcpyHostToDevice, 0);
-    cudaMemcpyAsync(cudaTree.massPosition, cpuTree.massPosition, capacity, cudaMemcpyHostToDevice, 0);
-    cudaMemcpyAsync(cudaTree.singleBody, cpuTree.singleBody, capacity, cudaMemcpyHostToDevice, 0);
-    cudaMemcpyAsync(cudaTree.mass, cpuTree.mass, capacity, cudaMemcpyHostToDevice, 0);
-    cudaMemcpyAsync(cudaTree.dist, cpuTree.dist, capacity, cudaMemcpyHostToDevice, 0);
-    cudaMemcpyAsync(cudaTree.nextIndex, cpuTree.nextIndex, capacity, cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.children, cpuTree.children, capacity * 8 * sizeof(int), cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.centerPosition, cpuTree.centerPosition, capacity * sizeof(Vec3f), cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.massPosition, cpuTree.massPosition, capacity * sizeof(Vec3f), cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.singleBody, cpuTree.singleBody, capacity * sizeof(int), cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.mass, cpuTree.mass, capacity * sizeof(float), cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.dist, cpuTree.dist, capacity * sizeof(float), cudaMemcpyHostToDevice, 0);
+    cudaMemcpyAsync(cudaTree.nextIndex, cpuTree.nextIndex, sizeof(int), cudaMemcpyHostToDevice, 0);
+    cudaDeviceSynchronize();
 }
 
 void freeTreeCUDA(Octree root) {
