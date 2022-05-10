@@ -23,7 +23,7 @@ __device__ Vec3f computeBarnesHutForce(Octree root, int node, Body body, float t
     double scalarForce = 0;
     Vec3f vectorDist = ptToVectorGPU(body.pos, root.massPosition[node]);
     float distSq = vectorDotGPU(vectorDist, vectorDist);
-    float invDist = 1.0f/sqrtf(distSq);
+    float invDist = __frsqrt_rn(distSq);
     //Check if the body and root are equal, if so there is no forces
     if(vectorEqGPU(body.pos, root.massPosition[node])) {
         return newVec3fGPU(0, 0, 0);
