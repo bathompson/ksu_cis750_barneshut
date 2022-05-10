@@ -144,13 +144,13 @@ int main(int argc, char **argv) {
         copyOctreeToCUDA(tree, gpuTree, capcity);
 
         // Copy input frame of bodies to CUDA
-        cudaMemcpy(gpuFrame, frames[i], bodyCount, cudaMemcpyHostToDevice);
+        cudaMemcpy(gpuFrame, frames[i], bodyCount * sizeof(Body), cudaMemcpyHostToDevice);
 
         // Simulate frame on GPU
         simulateFrame<<<(bodyCount + 255) / 256, 256>>>(gpuTree, gpuFrame, bodyCount, deltaT, theta, G);
 
         // Copy results back
-        cudaMemcpy(frames[i + 1], gpuFrame, bodyCount, cudaMemcpyDeviceToHost);
+        cudaMemcpy(frames[i + 1], gpuFrame, bodyCount * sizeof(Body), cudaMemcpyDeviceToHost);
     }
 
     // End timing
