@@ -58,7 +58,7 @@ float findMaxSize(Body* bodies, int bodyCount) {
 
 void constructBarnesHutTree(Octree tree, Body *frame, size_t count) {
     resetOctreeCPU(tree, capcity);
-    setDiameter(findMaxSize(frame, count));
+    setDiameter(tree, findMaxSize(frame, count));
     for(size_t i = 0; i<count; i++) {
         insertElement(tree, 0, frame[i].pos, frame[i].mass);
     }

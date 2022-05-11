@@ -4,9 +4,6 @@
 #include "vector_utils.h"
 #include "octree.h"
 
-float MAX_TREE_DIAMETER = 0;
-
-
 Octree allocateOctreeCPU(int capacity) {
     Octree tree;
     tree.children = calloc(capacity * 8, sizeof(int));
@@ -33,7 +30,7 @@ void resetOctreeCPU(Octree tree, int capacity) {
 int insertElement(Octree root, int node, Vec3f newVector, float mass) {
     //If tree does not exist yet.
     if(*root.nextIndex == 0) {
-        addOctreeChild(root, newVector, mass, 0, 0, 0, MAX_TREE_DIAMETER / 2);
+        addOctreeChild(root, newVector, mass, 0, 0, 0, root.maxDiameter / 2);
         return node;
     }
 
@@ -138,8 +135,8 @@ void freeTreeCPU(Octree root) {
     free(root.nextIndex);
 }
 
-void setDiameter(float maxSize) {
-    MAX_TREE_DIAMETER = maxSize;
+void setDiameter(Octree tree, float maxSize) {
+    tree.maxDiameter = maxSize;
 }
 
 

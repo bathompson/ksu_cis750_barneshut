@@ -6,13 +6,38 @@ extern "C"
 #include "../common/vector_utils.h"
 #include "../common/fileIO_util.h"
 #include "../common/octree.h"
-#include "cuda_octree.h"
 }
 #include "vector_utils.cuh"
+#include "cuda_octree.cuh"
 #include <chrono>
 
 int G = 0;
 int capcity = 0;
+
+void __cudaCheck(cudaError err, const char* file, const int line);
+#define cudaCheck(err) __cudaCheck (err, __FILE__, __LINE__)
+
+void __cudaCheckLastError(const char* errorMessage, const char* file, const int line);
+#define cudaCheckLastError(msg) __cudaCheckLastError (msg, __FILE__, __LINE__)
+
+void __cudaCheck(cudaError err, const char *file, const int line)
+{
+    if( cudaSuccess != err) {
+        fprintf(stderr, "%s(%i) : CUDA Runtime API error %d: %s.\n",
+                file, line, (int)err, cudaGetErrorString( err ) );
+        exit(-1);
+    }
+}
+
+void __cudaCheckLastError(const char *errorMessage, const char *file, const int line)
+{
+    cudaError_t err = cudaGetLastError();
+    if( cudaSuccess != err) {
+        fprintf(stderr, "%s(%i) : getLastCudaError() CUDA error : %s : (%d) %s.\n",
+                file, line, errorMessage, (int)err, cudaGetErrorString( err ) );
+        exit(-1);
+    }
+}
 
 __device__ Vec3f computeBarnesHutForce(Octree root, int node, Body body, float theta, int G) {
     //Check if the root is null, if so return 0 valued vector.
@@ -42,9 +67,39 @@ __device__ Vec3f computeBarnesHutForce(Octree root, int node, Body body, float t
     }
 }
 
-__global__ void simulateFrame(Octree tree, Body* frame, int count, float t, float theta, int G) {
+__device__ float findMaxSize(Body* bodies, int bodyCount) {
+    float max = 0.0f;
+    for(size_t i = 0; i < bodyCount; i++) {
+        if(fabsf(bodies->pos.x) > max) {
+            max = fabsf(bodies->pos.x);
+        }
+        if(fabsf(bodies->pos.y) > max) {
+            max = fabsf(bodies->pos.y);
+        }
+        if(fabsf(bodies->pos.z) > max) {
+            max = fabsf(bodies->pos.z);
+        }
+    }
+    return max;
+}
+
+__global__ void constructBarnesHutTree(Octree *globalTree, Body *frame, int count, int capacity) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index == 0) {
+        Octree tree = *globalTree;
+        resetOctreeGPU(tree, capacity);
+        setDiameterGPU(tree, findMaxSize(frame, count));
+        for (size_t i = 0; i < count; i++) {
+            insertElementGPU(tree, 0, frame[i].pos, frame[i].mass);
+        }
+        *globalTree = tree;
+    }
+}
+
+__global__ void simulateFrame(Octree *globalTree, Body *frame, int count, float t, float theta, int G) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index < count) {
+        Octree tree = *globalTree;
         Body body = frame[index];
         Vec3f netForce = computeBarnesHutForce(tree, 0, body, theta, G);
         Vec3f accel = vectorScalarMultGPU(1 / body.mass, netForce);
@@ -53,31 +108,6 @@ __global__ void simulateFrame(Octree tree, Body* frame, int count, float t, floa
         body.vel = finalVelGPU(accel, body.vel, t);
         frame[index] = body;
     }
-}
-
-float findMaxSize(Body* bodies, int bodyCount) {
-    float max = 0.0f;
-    for(size_t i = 0; i < bodyCount; i++) {
-        if(fabs(bodies->pos.x > max)) {
-            max = fabs(bodies->pos.x);
-        }
-        if(fabs(bodies->pos.y > max)) {
-            max = fabs(bodies->pos.y);
-        }
-        if(fabs(bodies->pos.z > max)) {
-            max = fabs(bodies->pos.z);
-        }
-    }
-    return max;
-}
-
-void constructBarnesHutTree(Octree tree, Body *frame, size_t count) {
-    resetOctreeCPU(tree, capcity);
-    setDiameter(findMaxSize(frame, count));
-    for(size_t i = 0; i<count; i++) {
-        insertElement(tree, 0, frame[i].pos, frame[i].mass);
-    }
-    //_debugPrint(tree, 0, 2);
 }
 
 int main(int argc, char **argv) {
@@ -126,8 +156,11 @@ int main(int argc, char **argv) {
     }
 
     capcity = bodyCount * 2;
-    Octree tree = allocateOctreeCPU(capcity);
-    Octree gpuTree = allocateOctreeCUDA(capcity);
+
+    Octree allocatedTree = allocateOctreeCUDA(capcity);
+    Octree *gpuTree = nullptr;
+    cudaMalloc(&gpuTree, sizeof(Octree));
+    cudaMemcpy(gpuTree, &allocatedTree, sizeof(Octree), cudaMemcpyHostToDevice);
 
     //Data input
     data = fopen(filePath, "r");
@@ -137,20 +170,21 @@ int main(int argc, char **argv) {
     // Begin timing
     auto starttime = std::chrono::high_resolution_clock::now();
 
+    // Copy initial frame of bodies to CUDA
+    cudaMemcpy(gpuFrame, frames[0], bodyCount * sizeof(Body), cudaMemcpyHostToDevice);
+
     //Do the thing
     for(size_t i = 0; i < timeSteps - 1; i++) {
-        // Build tree and copy it to CUDA
-        constructBarnesHutTree(tree, frames[i], bodyCount);
-        copyOctreeToCUDA(tree, gpuTree, capcity);
-
-        // Copy input frame of bodies to CUDA
-        cudaMemcpy(gpuFrame, frames[i], bodyCount * sizeof(Body), cudaMemcpyHostToDevice);
+        // Build tree on GPU
+        constructBarnesHutTree<<<1, 1>>>(gpuTree, gpuFrame, bodyCount, capcity);
+        cudaDeviceSynchronize();
 
         // Simulate frame on GPU
         simulateFrame<<<(bodyCount + 255) / 256, 256>>>(gpuTree, gpuFrame, bodyCount, deltaT, theta, G);
+        cudaDeviceSynchronize();
 
         // Copy results back
-        cudaMemcpy(frames[i + 1], gpuFrame, bodyCount * sizeof(Body), cudaMemcpyDeviceToHost);
+        //cudaMemcpy(frames[i + 1], gpuFrame, bodyCount * sizeof(Body), cudaMemcpyDeviceToHost);
     }
 
     // End timing
@@ -183,8 +217,8 @@ int main(int argc, char **argv) {
     free(frames);
     free(pos);
     free(masses);
-    cudaFree(gpuFrame);
 
-    freeTreeCPU(tree);
-    freeTreeCUDA(gpuTree);
+    cudaFree(gpuFrame);
+    freeTreeCUDA(allocatedTree);
+    cudaFree(gpuTree);
 }
