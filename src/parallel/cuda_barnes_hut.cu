@@ -10,9 +10,13 @@ extern "C"
 #include "vector_utils.cuh"
 #include "cuda_octree.cuh"
 #include <chrono>
+#include <cooperative_groups.h>
+namespace cg = cooperative_groups;
 
 int G = 0;
 int capcity = 0;
+
+static const int blockSize = 256;
 
 void __cudaCheck(cudaError err, const char* file, const int line);
 #define cudaCheck(err) __cudaCheck (err, __FILE__, __LINE__)
@@ -67,31 +71,68 @@ __device__ Vec3f computeBarnesHutForce(Octree root, int node, Body body, float t
     }
 }
 
-__device__ float findMaxSize(Body* bodies, int bodyCount) {
+__device__ void findMaxSize(Body* bodies, int bodyCount, float *blockMax) {
+    cg::grid_group grid = cg::this_grid();
+
+    // Parallel reduction inspired by https://riptutorial.com/cuda/example/22458/multi-block-parallel-reduction-for-commutative-operator
+    int threadIndex = threadIdx.x;
+    int gridThreadIndex = threadIdx.x + blockIdx.x * blockDim.x;
+    const int gridSize = blockDim.x * gridDim.x;
+
+    // Compute max on this block
     float max = 0.0f;
-    for(size_t i = 0; i < bodyCount; i++) {
-        if(fabsf(bodies->pos.x) > max) {
-            max = fabsf(bodies->pos.x);
-        }
-        if(fabsf(bodies->pos.y) > max) {
-            max = fabsf(bodies->pos.y);
-        }
-        if(fabsf(bodies->pos.z) > max) {
-            max = fabsf(bodies->pos.z);
-        }
+    for (int i = gridThreadIndex; i < bodyCount; i += gridSize)
+    {
+        max = fmaxf(max, fabsf(bodies->pos.x));
+        max = fmaxf(max, fabsf(bodies->pos.y));
+        max = fmaxf(max, fabsf(bodies->pos.z));
     }
-    return max;
+    __shared__ float shArr[blockSize];
+    shArr[threadIndex] = max;
+    __syncthreads();
+    for (int size = blockSize / 2; size > 0; size /= 2)
+    {
+        if (threadIndex < size)
+            shArr[threadIndex] = fmaxf(shArr[threadIndex], shArr[threadIndex + size]);
+        __syncthreads();
+    }
+    if (threadIndex == 0)
+        blockMax[blockIdx.x] = shArr[0];
+
+    grid.sync();
+
+    // If we are the first block, compute max from other blocks
+    if (gridThreadIndex == 0) {
+        shArr[threadIndex] = threadIndex < gridSize ? blockMax[threadIndex] : 0;
+        __syncthreads();
+        for (int size = blockSize / 2; size > 0; size /= 2) {
+            if (threadIndex < size)
+                shArr[threadIndex] = fmaxf(shArr[threadIndex], shArr[threadIndex + size]);
+            __syncthreads();
+        }
+        if (threadIndex == 0)
+            blockMax[0] = shArr[0];
+    }
 }
 
-__global__ void constructBarnesHutTree(Octree *globalTree, Body *frame, int count, int capacity) {
+__global__ void constructBarnesHutTree(Octree *globalTree, Body *frame, int count, int capacity, float *blockMax) {
+    cg::grid_group grid = cg::this_grid();
+
     int index = blockIdx.x * blockDim.x + threadIdx.x;
+    Octree tree = *globalTree;
+
+    findMaxSize(frame, count, blockMax);
+    resetOctreeGPU(tree, capacity);
+    grid.sync();
+    setDiameterGPU(tree, blockMax[0]);
+
     if (index == 0) {
-        Octree tree = *globalTree;
-        resetOctreeGPU(tree, capacity);
-        setDiameterGPU(tree, findMaxSize(frame, count));
         for (size_t i = 0; i < count; i++) {
             insertElementGPU(tree, 0, frame[i].pos, frame[i].mass);
         }
+    }
+
+    if (index == 0) {
         *globalTree = tree;
     }
 }
@@ -162,6 +203,9 @@ int main(int argc, char **argv) {
     cudaMalloc(&gpuTree, sizeof(Octree));
     cudaMemcpy(gpuTree, &allocatedTree, sizeof(Octree), cudaMemcpyHostToDevice);
 
+    float *gpuBlockMax = nullptr;
+    cudaMalloc(&gpuBlockMax, sizeof(float));
+
     //Data input
     data = fopen(filePath, "r");
     readInput(data, frames[0], bodyCount);
@@ -176,7 +220,8 @@ int main(int argc, char **argv) {
     //Do the thing
     for(size_t i = 0; i < timeSteps - 1; i++) {
         // Build tree on GPU
-        constructBarnesHutTree<<<1, 1>>>(gpuTree, gpuFrame, bodyCount, capcity);
+        void *kernelArgs[] = {&gpuTree, &gpuFrame, &bodyCount, &capcity, &gpuBlockMax };
+        cudaLaunchCooperativeKernel((void*)&constructBarnesHutTree, bodyCount + 255 / 256, 256, kernelArgs);
         cudaDeviceSynchronize();
 
         // Simulate frame on GPU
@@ -184,7 +229,7 @@ int main(int argc, char **argv) {
         cudaDeviceSynchronize();
 
         // Copy results back
-        //cudaMemcpy(frames[i + 1], gpuFrame, bodyCount * sizeof(Body), cudaMemcpyDeviceToHost);
+        cudaMemcpy(frames[i + 1], gpuFrame, bodyCount * sizeof(Body), cudaMemcpyDeviceToHost);
     }
 
     // End timing
@@ -221,4 +266,5 @@ int main(int argc, char **argv) {
     cudaFree(gpuFrame);
     freeTreeCUDA(allocatedTree);
     cudaFree(gpuTree);
+    cudaFree(gpuBlockMax);
 }

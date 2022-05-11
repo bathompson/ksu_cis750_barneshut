@@ -26,14 +26,17 @@ Octree allocateOctreeCUDA(int capacity) {
 }
 
 __device__ void resetOctreeGPU(Octree tree, int capacity) {
-    for (int i = 0; i < capacity; i++)
-        tree.children[i] = -1;
-    memset(tree.centerPosition, 0, capacity * sizeof(Vec3f));
-    memset(tree.massPosition, 0, capacity * sizeof(Vec3f));
-    memset(tree.singleBody, 0, capacity * sizeof(int));
-    memset(tree.mass, 0, capacity * sizeof(float));
-    memset(tree.dist, 0, capacity * sizeof(float));
-    memset(tree.nextIndex, 0, sizeof(int));
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    for (int i = index; i < capacity; i += blockDim.x * gridDim.x) {
+        for (int j = 0; j < 8; j++)
+            tree.children[i * 8 + j] = -1;
+        tree.centerPosition[i] = newVec3fGPU(0, 0, 0);
+        tree.massPosition[i] = newVec3fGPU(0, 0, 0);
+        tree.singleBody[i] = 0;
+        tree.mass[i] = 0;
+        tree.dist[i] = 0;
+        tree.nextIndex[i] = 0;
+    }
 }
 
 void copyOctreeToCUDA(Octree cpuTree, Octree cudaTree, int capacity) {
