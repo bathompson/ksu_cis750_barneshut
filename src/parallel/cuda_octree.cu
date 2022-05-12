@@ -162,6 +162,7 @@ __device__ int getOctantPositionGPU(Vec3f position, float x, float y, float z) {
     return ret - 1;
 }
 
-__device__ void setDiameterGPU(Octree tree, float maxSize) {
+__device__ Octree setDiameterGPU(Octree tree, float maxSize) {
     tree.maxDiameter = maxSize;
+    return tree;
 }

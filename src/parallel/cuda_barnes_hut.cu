@@ -124,7 +124,7 @@ __global__ void constructBarnesHutTree(Octree *globalTree, Body *frame, int coun
     findMaxSize(frame, count, blockMax);
     resetOctreeGPU(tree, capacity);
     grid.sync();
-    setDiameterGPU(tree, blockMax[0]);
+    tree = setDiameterGPU(tree, blockMax[0]);
 
     if (index == 0) {
         for (size_t i = 0; i < count; i++) {

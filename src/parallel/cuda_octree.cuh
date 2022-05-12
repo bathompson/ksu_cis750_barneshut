@@ -100,4 +100,4 @@ __device__ int getOctantPositionGPU(Vec3f position, float x, float y, float z);
  *
  * @param size The diameter of the octree.
  */
-__device__ void setDiameterGPU(Octree tree, float size);
+__device__ Octree setDiameterGPU(Octree tree, float size);
