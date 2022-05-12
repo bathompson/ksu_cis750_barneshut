@@ -101,7 +101,7 @@ void freeTreeCPU(Octree root);
  * 
  * @param size The diameter of the octree.
  */
-void setDiameter(Octree tree, float size);
+Octree setDiameter(Octree tree, float size);
 
 /**
  * @brief Debug method to make sure things are inserting properly.

@@ -135,8 +135,9 @@ void freeTreeCPU(Octree root) {
     free(root.nextIndex);
 }
 
-void setDiameter(Octree tree, float maxSize) {
+Octree setDiameter(Octree tree, float maxSize) {
     tree.maxDiameter = maxSize;
+    return tree;
 }
 
 
