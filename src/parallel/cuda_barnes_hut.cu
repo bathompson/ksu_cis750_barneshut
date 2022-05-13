@@ -16,7 +16,7 @@ namespace cg = cooperative_groups;
 int G = 0;
 int capcity = 0;
 
-static const int blockSize = 256;
+static const int blockSize = 32;
 
 void __cudaCheck(cudaError err, const char* file, const int line);
 #define cudaCheck(err) __cudaCheck (err, __FILE__, __LINE__)
@@ -221,11 +221,11 @@ int main(int argc, char **argv) {
     for(size_t i = 0; i < timeSteps - 1; i++) {
         // Build tree on GPU
         void *kernelArgs[] = {&gpuTree, &gpuFrame, &bodyCount, &capcity, &gpuBlockMax };
-        cudaLaunchCooperativeKernel((void*)&constructBarnesHutTree, bodyCount + 255 / 256, 256, kernelArgs);
+        cudaLaunchCooperativeKernel((void*)&constructBarnesHutTree, bodyCount, blockSize, kernelArgs);
         cudaDeviceSynchronize();
 
         // Simulate frame on GPU
-        simulateFrame<<<(bodyCount + 255) / 256, 256>>>(gpuTree, gpuFrame, bodyCount, deltaT, theta, G);
+        simulateFrame<<<(bodyCount + (blockSize - 1)) / blockSize, blockSize>>>(gpuTree, gpuFrame, bodyCount, deltaT, theta, G);
         cudaDeviceSynchronize();
 
         // Copy results back
